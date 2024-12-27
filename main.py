@@ -37,4 +37,4 @@ class Bot(commands.Bot, ABC):
 
 bot = Bot()
 
-bot.run("Nzk3MzM5MjM5NDg5NzMyNjQ4.Gfrqq4.BIpy5fLKaFkXetOQzEqYZ9E5N1TaenF0BboKmA")
+bot.run("")
