@@ -2,10 +2,14 @@ from abc import ABC
 
 import discord
 from discord import slash_command, Option, ApplicationContext
+from discord.ext import commands
 
 import asyncio
-from discord.ext import commands
+
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 intents = discord.Intents.all()
 
@@ -37,4 +41,4 @@ class Bot(commands.Bot, ABC):
 
 bot = Bot()
 
-bot.run("")
+bot.run(os.environ.get('TOKEN'))
