@@ -12,8 +12,6 @@ from functools import partial
 import datetime
 import time
 
-# https://github.com/BPHacks/MusicBotinDiscordpy/blob/main/Cogs/music.py
-
 
 ytdl_format_options = {
     'format': 'bestaudio/best',

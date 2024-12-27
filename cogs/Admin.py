@@ -1,11 +1,16 @@
+import os
+
 import discord
 from discord import slash_command, Option, ApplicationContext
 from discord.ext import commands
 
 import asyncio
 
+from dotenv import load_dotenv
 
-OWNERS = [656059360882982912, 822445708467503114]
+load_dotenv()
+
+OWNERS = map(int, os.environ.get('OWNERS').split())
 
 
 class Admin(commands.Cog):
