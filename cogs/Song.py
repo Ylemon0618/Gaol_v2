@@ -1,16 +1,16 @@
 import discord
-from discord import slash_command, Option, ApplicationContext
+from discord import Option, ApplicationContext
 from discord.ext import commands
 
 import asyncio
 from async_timeout import timeout
 
-import ffmpeg
 from yt_dlp import YoutubeDL
 
 from functools import partial
-import datetime
-import time
+
+from modules.make_embed import makeEmbed, Field, Color
+from modules.song_queue_button import QueueMainView
 
 
 ytdl_format_options = {
@@ -35,41 +35,6 @@ ffmpeg_options = {
 ytdl = YoutubeDL(ytdl_format_options)
 
 
-# 임베드 색깔 클래스
-class Color:
-    # 성공(초록색)
-    success = 0x00FF00
-
-    # 실패(빨간색)
-    error = 0xFF0000
-
-    # 경고(노란색)
-    # 확인 창에 사용
-    warning = 0xFFFF00
-
-
-# 필드(임베드) 클래스
-class Field:
-    def __init__(self, name: str, value: str, inline: bool = False):
-        self.name = name
-        self.value = value
-        self.inline = inline
-
-
-# 임베드 생성
-def makeEmbed(title: str, description: str, color: int, *fields: list[Field]):
-    embed = discord.Embed(title=title, description=description, color=color, timestamp=datetime.datetime.utcnow())
-
-    # 푸터에 봇 아이콘 / 봇 이름 설정
-    # embed.set_footer(text=bot_user.name, icon_url=bot_user.avatar.url)
-
-    if fields:
-        for field in fields:
-            embed.add_field(name=field.name, value=field.value, inline=field.inline)
-
-    return embed
-
-
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data):
         super().__init__(source)
@@ -82,22 +47,25 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def create_source(cls, ctx, url, *, loop, download=False):
-        loop = loop or asyncio.get_event_loop()
+        try:
+            loop = loop or asyncio.get_event_loop()
 
-        to_run = partial(ytdl.extract_info, url=url, download=download)
-        data = await loop.run_in_executor(None, to_run)
+            to_run = partial(ytdl.extract_info, url=url, download=download)
+            data = await loop.run_in_executor(None, to_run)
 
-        if 'entries' in data:
-            data = data['entries'][0]
+            if 'entries' in data:
+                data = data['entries'][0]
 
-        await ctx.respond(f"**{data['title']}** successfully added to queue")
+            await ctx.respond(f"**{data['title']}** successfully added to queue")
 
-        if download:
-            source = ytdl.prepare_filename(data)
-        else:
-            return {'url': data['webpage_url'], 'title': data['title']}
+            if download:
+                source = ytdl.prepare_filename(data)
+            else:
+                return {'url': data['webpage_url'], 'title': data['title']}
 
-        return cls(discord.FFmpegPCMAudio(source), data=data)
+            return cls(discord.FFmpegPCMAudio(source), data=data)
+        except Exception as e:
+            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error), ephemeral=True)
 
     @classmethod
     async def regather_stream(cls, data, *, loop):
@@ -170,6 +138,7 @@ class Song(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.players = {}
+        self.queue = []
 
     song_commands = discord.SlashCommandGroup(name="song", name_localizations={"ko": "노래"},
                                               description="Commands for song",
@@ -355,6 +324,25 @@ class Song(commands.Cog):
         await self.cleanup(ctx.guild)
 
         await ctx.respond(embed=makeEmbed(":no_entry: Paused :no_entry:", "노래 재생을 중지했습니다.", Color.success))
+
+    # 대기열
+    # Param: ctx
+    @song_commands.command(name="queue", name_localizations={"ko": "대기열"},
+                           description="Check the queue",
+                           description_localizations={"ko": "대기열을 확인 및 편집합니다."})
+    async def queue_(self, ctx: ApplicationContext):
+        if self.players.get(ctx.guild.id) is None:
+            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "현재 대기열이 비어있습니다.", Color.error))
+
+        self.queue = list(self.players[ctx.guild.id].queue._queue)
+        options = []
+
+        embed=makeEmbed(":musical_note: Queue :musical_note:", "\n", Color.success)
+        for i in range(min(10, len(self.queue))):
+            embed.add_field(name=self.queue[i].title, value="", inline=False)
+            options.append(self.queue[i].title)
+
+        await ctx.respond(embed=embed, view=QueueMainView(options))
 
 
 def setup(bot):
