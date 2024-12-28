@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
@@ -25,8 +25,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /path/to/your/project
-            git pull origin main
+            cd ~/gaol_v2
+            git pull origin master
             python3 -m venv venv
             source venv/bin/activate
             pip install -r requirements.txt
