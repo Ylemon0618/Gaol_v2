@@ -1,4 +1,5 @@
 import discord
+from aiohttp.web_routedef import delete
 from discord import Option, ApplicationContext
 from discord.ext import commands
 
@@ -109,8 +110,7 @@ class SongPlayer(commands.Cog):
                 try:
                     source = await YTDLSource.regather_stream(source, loop=self.bot.loop)
                 except Exception as e:
-                    await self._channel.send(embed=makeEmbed(":warning: Error :warning:",
-                                                             f"{e}", Color.error))
+                    await self._channel.send(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error))
                     continue
 
             source.volume = self.volume
@@ -138,7 +138,8 @@ class Song(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.players = {}
-        self.queue = []
+        self.queue = asyncio.Queue()
+        self.queue_listed = []
 
     song_commands = discord.SlashCommandGroup(name="song", name_localizations={"ko": "노래"},
                                               description="Commands for song",
@@ -334,15 +335,16 @@ class Song(commands.Cog):
         if self.players.get(ctx.guild.id) is None:
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "현재 대기열이 비어있습니다.", Color.error))
 
-        self.queue = list(self.players[ctx.guild.id].queue._queue)
-        options = []
+        self.queue = self.players[ctx.guild.id].queue
+        self.queue_listed = list(self.players[ctx.guild.id].queue._queue)
+        title = []
 
-        embed=makeEmbed(":musical_note: Queue :musical_note:", "\n", Color.success)
-        for i in range(min(10, len(self.queue))):
-            embed.add_field(name=self.queue[i].title, value="", inline=False)
-            options.append(self.queue[i].title)
+        embed=makeEmbed(":musical_note: Queue :musical_note:", "", Color.success)
+        for i in range(min(10, len(self.queue_listed))):
+            embed.add_field(name=self.queue_listed[i].title, value="", inline=False)
+            title.append(self.queue_listed[i].title)
 
-        await ctx.respond(embed=embed, view=QueueMainView(options))
+        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, self.queue_listed, title))
 
 
 def setup(bot):
