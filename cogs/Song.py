@@ -25,7 +25,7 @@ class Song(commands.Cog):
         try:
             player = self.players[ctx.guild.id]
         except KeyError:
-            player = SongPlayer(ctx)
+            player = SongPlayer(ctx, self.players)
             self.players[ctx.guild.id] = player
 
         return player
