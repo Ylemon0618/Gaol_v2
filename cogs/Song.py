@@ -185,14 +185,12 @@ class Song(commands.Cog):
             try:
                 await vc.move_to(channel)
             except asyncio.TimeoutError:
-                return await ctx.respond(
-                    embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
+                return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
         else:
             try:
                 await channel.connect()
             except asyncio.TimeoutError:
-                return await ctx.respond(
-                    embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
+                return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
 
     # 음챗 나가기
     # Param: ctx
@@ -203,7 +201,8 @@ class Song(commands.Cog):
         if ctx.voice_client is None:
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "음성 채팅방에 접속해야 합니다.", Color.error))
 
-        return await ctx.voice_client.disconnect()
+        await ctx.voice_client.disconnect()
+        return await ctx.respond("힝")
 
     # 볼륨 조절
     # Param: ctx, volume
