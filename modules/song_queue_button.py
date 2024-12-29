@@ -1,12 +1,9 @@
 import discord
-from discord import Option, ApplicationContext, Interaction
-from discord.ext import commands
+from discord import Interaction
 
 import asyncio
 
-from copy import deepcopy
-
-from modules.make_embed import makeEmbed, Field, Color
+from modules.make_embed import makeEmbed, Color
 
 
 class QueueMainView(discord.ui.View):

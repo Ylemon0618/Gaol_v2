@@ -4,7 +4,7 @@ from discord.ext import commands
 
 import asyncio
 
-from modules.make_embed import makeEmbed, Field, Color
+from modules.make_embed import makeEmbed, Color
 from modules.song_queue_button import QueueMainView
 from modules.song_player import YTDLSource, SongPlayer
 

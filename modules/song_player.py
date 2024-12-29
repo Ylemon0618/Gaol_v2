@@ -9,7 +9,7 @@ from yt_dlp import YoutubeDL
 
 from functools import partial
 
-from modules.make_embed import makeEmbed, Field, Color
+from modules.make_embed import makeEmbed, Color
 
 
 ytdl_format_options = {
