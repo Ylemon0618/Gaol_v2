@@ -25,7 +25,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd ~/gaol_v2
+            cd ~/Gaol_v2
             git pull origin master
             python3 -m venv venv
             source venv/bin/activate
