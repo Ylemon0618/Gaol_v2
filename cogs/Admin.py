@@ -1,10 +1,7 @@
 import os
 
 import discord
-from discord import slash_command, Option, ApplicationContext
 from discord.ext import commands
-
-import asyncio
 
 from dotenv import load_dotenv
 

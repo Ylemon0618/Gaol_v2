@@ -1,197 +1,31 @@
 import discord
-from discord import slash_command, Option, ApplicationContext
+from discord import Option, ApplicationContext
 from discord.ext import commands
 
 import asyncio
-from async_timeout import timeout
 
-import ffmpeg
-from yt_dlp import YoutubeDL
-
-from functools import partial
-import datetime
-import time
-
-
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'outtmpl': 'downloads/%(extractor)s-%(id)s-%(title)s.%(ext)s',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0'  # ipv6 addresses cause issues sometimes
-}
-
-ffmpeg_options = {
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': '-vn',
-}
-
-ytdl = YoutubeDL(ytdl_format_options)
-
-
-# 임베드 색깔 클래스
-class Color:
-    # 성공(초록색)
-    success = 0x00FF00
-
-    # 실패(빨간색)
-    error = 0xFF0000
-
-    # 경고(노란색)
-    # 확인 창에 사용
-    warning = 0xFFFF00
-
-
-# 필드(임베드) 클래스
-class Field:
-    def __init__(self, name: str, value: str, inline: bool = False):
-        self.name = name
-        self.value = value
-        self.inline = inline
-
-
-# 임베드 생성
-def makeEmbed(title: str, description: str, color: int, *fields: list[Field]):
-    embed = discord.Embed(title=title, description=description, color=color, timestamp=datetime.datetime.utcnow())
-
-    # 푸터에 봇 아이콘 / 봇 이름 설정
-    # embed.set_footer(text=bot_user.name, icon_url=bot_user.avatar.url)
-
-    if fields:
-        for field in fields:
-            embed.add_field(name=field.name, value=field.value, inline=field.inline)
-
-    return embed
-
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data):
-        super().__init__(source)
-
-        self.title = data.get('title')
-        self.url = data.get('webpage_url')
-
-    def __getitem__(self, item: str):
-        return self.__getattribute__(item)
-
-    @classmethod
-    async def create_source(cls, ctx, url, *, loop, download=False):
-        loop = loop or asyncio.get_event_loop()
-
-        to_run = partial(ytdl.extract_info, url=url, download=download)
-        data = await loop.run_in_executor(None, to_run)
-
-        if 'entries' in data:
-            data = data['entries'][0]
-
-        await ctx.respond(f"**{data['title']}** successfully added to queue")
-
-        if download:
-            source = ytdl.prepare_filename(data)
-        else:
-            return {'url': data['webpage_url'], 'title': data['title']}
-
-        return cls(discord.FFmpegPCMAudio(source), data=data)
-
-    @classmethod
-    async def regather_stream(cls, data, *, loop):
-        loop = loop or asyncio.get_event_loop()
-
-        to_run = partial(ytdl.extract_info, url=data['webpage_url'], download=False)
-        data = await loop.run_in_executor(None, to_run)
-
-        return cls(discord.FFmpegPCMAudio(data['url']), data=data)
-
-
-class SongPlayer(commands.Cog):
-    def __init__(self, ctx: ApplicationContext):
-        self.bot = ctx.bot
-        self._guild = ctx.guild
-        self._channel = ctx.channel
-        self._cog = ctx.cog
-
-        self.queue = asyncio.Queue()
-        self.next = asyncio.Event()
-
-        self.now_playing = None
-        self.volume = 0.5
-        self.current = None
-
-        ctx.bot.loop.create_task(self.player_loop())
-
-    async def player_loop(self):
-        await self.bot.wait_until_ready()
-
-        while not self.bot.is_closed():
-            self.next.clear()
-
-            try:
-                async with timeout(300):
-                    source = await self.queue.get()
-            except asyncio.TimeoutError:
-                return self.destroy(self._guild)
-
-            if not isinstance(source, YTDLSource):
-                try:
-                    source = await YTDLSource.regather_stream(source, loop=self.bot.loop)
-                except Exception as e:
-                    await self._channel.send(embed=makeEmbed(":warning: Error :warning:",
-                                                             f"{e}", Color.error))
-                    continue
-
-            source.volume = self.volume
-            self.current = source
-
-            self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-            self.now_playing = await self._channel.send(embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                                                                        f"**{source.title}**", Color.success))
-            await self.next.wait()
-
-            source.cleanup()
-            self.current = None
-
-            try:
-                await self.now_playing.delete()
-            except discord.HTTPException:
-                pass
-
-    def destroy(self, guild):
-        # return self.bot.loop.create_task(self._cog.cleanup(guild))
-        return self.bot.loop.create_task(Song(self.bot).cleanup(guild))
+from modules.make_embed import makeEmbed, Color
+from modules.song_queue_button import QueueMainView
+from modules.song_player import YTDLSource, SongPlayer
 
 
 class Song(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.players = {}
+        self.queue = asyncio.Queue()
+        self.queue_listed = []
 
     song_commands = discord.SlashCommandGroup(name="song", name_localizations={"ko": "노래"},
                                               description="Commands for song",
                                               description_localizations={"ko": "노래와 관련된 명령어"},
                                               guild_ids=[1278195924203601930])
 
-    async def cleanup(self, guild):
-        try:
-            await guild.voice_client.disconnect()
-        except AttributeError:
-            pass
-
-        try:
-            del self.players[guild.id]
-        except KeyError:
-            pass
-
     def get_player(self, ctx):
         try:
             player = self.players[ctx.guild.id]
         except KeyError:
-            player = SongPlayer(ctx)
+            player = SongPlayer(ctx, self.players)
             self.players[ctx.guild.id] = player
 
         return player
@@ -215,14 +49,12 @@ class Song(commands.Cog):
             try:
                 await vc.move_to(channel)
             except asyncio.TimeoutError:
-                return await ctx.respond(
-                    embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
+                return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
         else:
             try:
                 await channel.connect()
             except asyncio.TimeoutError:
-                return await ctx.respond(
-                    embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
+                return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
 
     # 음챗 나가기
     # Param: ctx
@@ -233,7 +65,8 @@ class Song(commands.Cog):
         if ctx.voice_client is None:
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "음성 채팅방에 접속해야 합니다.", Color.error))
 
-        return await ctx.voice_client.disconnect()
+        await ctx.voice_client.disconnect()
+        return await ctx.respond("힝")
 
     # 볼륨 조절
     # Param: ctx, volume
@@ -355,6 +188,26 @@ class Song(commands.Cog):
         await self.cleanup(ctx.guild)
 
         await ctx.respond(embed=makeEmbed(":no_entry: Paused :no_entry:", "노래 재생을 중지했습니다.", Color.success))
+
+    # 대기열
+    # Param: ctx
+    @song_commands.command(name="queue", name_localizations={"ko": "대기열"},
+                           description="Check the queue",
+                           description_localizations={"ko": "대기열을 확인 및 편집합니다."})
+    async def queue_(self, ctx: ApplicationContext):
+        if self.players.get(ctx.guild.id) is None:
+            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "현재 대기열이 비어있습니다.", Color.error))
+
+        self.queue = self.players[ctx.guild.id].queue
+        self.queue_listed = list(self.players[ctx.guild.id].queue._queue)
+        title = []
+
+        embed=makeEmbed(":musical_note: Queue :musical_note:", "", Color.success)
+        for i in range(min(10, len(self.queue_listed))):
+            embed.add_field(name=self.queue_listed[i].title, value="", inline=False)
+            title.append(self.queue_listed[i].title)
+
+        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, self.queue_listed, title))
 
 
 def setup(bot):
