@@ -6,7 +6,7 @@ import asyncio
 
 from modules.make_embed import makeEmbed, Color
 from modules.song_queue_button import QueueMainView
-from modules.song_player import YTDLSource, SongPlayer
+from modules.song_player import YTDLSource, SongPlayer, cleanup
 
 
 class Song(commands.Cog):
@@ -185,7 +185,7 @@ class Song(commands.Cog):
         if not vc or not vc.is_connected():
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "현재 재생 중인 노래가 없습니다.", Color.error))
 
-        await self.cleanup(ctx.guild)
+        await cleanup(ctx.guild, self.players)
 
         await ctx.respond(embed=makeEmbed(":no_entry: Paused :no_entry:", "노래 재생을 중지했습니다.", Color.success))
 
