@@ -8,6 +8,13 @@ from modules.make_embed import makeEmbed, Color
 from modules.song_queue_button import QueueMainView
 from modules.song_player import YTDLSource, SongPlayer, cleanup
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+guild_ids = list(map(int, os.environ.get('GUILDS').split()))
+
 
 class Song(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -19,7 +26,7 @@ class Song(commands.Cog):
     song_commands = discord.SlashCommandGroup(name="song", name_localizations={"ko": "노래"},
                                               description="Commands for song",
                                               description_localizations={"ko": "노래와 관련된 명령어"},
-                                              guild_ids=[1278195924203601930])
+                                              guild_ids=guild_ids)
 
     def get_player(self, ctx):
         try:
