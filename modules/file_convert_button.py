@@ -10,17 +10,17 @@ import os
 from modules.make_embed import makeEmbed, Color
 
 
-async def convert(file: discord.Attachment, ext: str):
+async def Convert(file: discord.Attachment, ext: str):
     directory = f"./modules/images/"
     filename = file.filename
 
     with open(directory + filename, "wb") as handler:
         handler.write(requests.get(file.url).content)
 
-    new = Image.open(directory + filename).convert("RGBA")
+    new = Image.open(directory + filename).convert("RGB")
 
     os.remove(directory + filename)
-    filename = filename.replace(".webp", f".{ext}")
+    filename = '.'.join(filename.split('.')[:-1]) + f".{ext}"
     new.save(os.path.join(directory, filename))
 
     return directory + filename
@@ -33,7 +33,7 @@ class ConvertMainView(discord.ui.View):
 
     async def callback(self, button: discord.Button, interaction: Interaction):
         try:
-            path = await convert(self.file, button.custom_id)
+            path = await Convert(self.file, button.custom_id)
 
             await interaction.response.edit_message(file=discord.File(path), embed=None, view=None)
 
