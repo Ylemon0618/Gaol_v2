@@ -5,7 +5,7 @@ from discord.ext import commands
 import asyncio
 
 from modules.make_embed import makeEmbed, Color
-from modules.file_convert_button import ConvertMainView, convert
+from modules.file_convert_button import ConvertMainView, Convert
 
 import os
 from dotenv import load_dotenv
@@ -63,7 +63,7 @@ class File(commands.Cog):
 
             await ctx.respond(embed=embed, view=ConvertMainView(file), ephemeral=True)
         else:
-            path = await convert(file, "webp")
+            path = await Convert(file, "webp")
 
             await ctx.respond(file=discord.File(path), ephemeral=True)
 
