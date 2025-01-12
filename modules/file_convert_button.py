@@ -30,7 +30,7 @@ class ConvertMainView(discord.ui.View):
             filename = filename.replace(".webp", f".{ext}")
             new.save(os.path.join(directory, filename))
 
-            await interaction.response.edit_message(file=discord.File(directory + filename), embed=None)
+            await interaction.response.edit_message(file=discord.File(directory + filename), embed=None, view=None)
 
             os.remove(directory + filename)
         except Exception as e:
