@@ -33,7 +33,7 @@ class File(commands.Cog):
                                      description_localizations={"ko": "오디오를 추출 할 영상 파일을 업로드 해 주세요."}),
                        ext: Option(str, name="extension", name_localizations={"ko": "확장자"},
                                    description="Choose extension of audio file",
-                                   description_localizations={"ko": "오디오 파일의 확장자를 입력해 주세요."},
+                                   description_localizations={"ko": "오디오 파일의 확장자를 선택 해 주세요."},
                                    choices=[
                                        OptionChoice(name="wav", value="wav"),
                                        OptionChoice(name="mp3", value="mp3")
