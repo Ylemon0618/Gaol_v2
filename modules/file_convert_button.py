@@ -17,7 +17,7 @@ async def Convert(file: discord.Attachment, ext: str):
     with open(directory + filename, "wb") as handler:
         handler.write(requests.get(file.url).content)
 
-    new = Image.open(directory + filename).convert("RGB")
+    new = Image.open(directory + filename).convert("RGBA" if ext == "png" else "RGB")
 
     os.remove(directory + filename)
     filename = '.'.join(filename.split('.')[:-1]) + f".{ext}"
