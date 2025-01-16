@@ -86,8 +86,6 @@ def get_chord(chord: str):
         name = chord.removeprefix(root_str)
         other = None
 
-    chord_name += name
-
     pattern = None
     notes_num = None
     for key, possible_names in chord_names.items():
@@ -95,6 +93,8 @@ def get_chord(chord: str):
             name = key
             pattern, notes_num = chord_pattern[name]
             break
+
+    chord_name += name
 
     if not pattern:
         return
@@ -126,7 +126,7 @@ def get_chord(chord: str):
             except ValueError:
                 continue
 
-    chord_name = chord_name[:-1] + ")"
+        chord_name = chord_name[:-1] + ")"
 
     notes = []
     notes_str = []
