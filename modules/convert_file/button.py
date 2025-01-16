@@ -1,29 +1,11 @@
 import discord
 from discord import Interaction
 
-import asyncio
-
-from PIL import Image
-import requests
 import os
 
 from modules.make_embed import makeEmbed, Color
+from .convert_file import Convert
 
-
-async def Convert(file: discord.Attachment, ext: str):
-    directory = f"./modules/images/"
-    filename = file.filename
-
-    with open(directory + filename, "wb") as handler:
-        handler.write(requests.get(file.url).content)
-
-    new = Image.open(directory + filename).convert("RGBA" if ext == "png" else "RGB")
-
-    os.remove(directory + filename)
-    filename = '.'.join(filename.split('.')[:-1]) + f".{ext}"
-    new.save(os.path.join(directory, filename))
-
-    return directory + filename
 
 class ConvertMainView(discord.ui.View):
     def __init__(self, file: discord.Attachment):
