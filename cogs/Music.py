@@ -2,9 +2,6 @@ import discord
 from discord import Option, OptionChoice, ApplicationContext
 from discord.ext import commands
 
-import asyncio
-
-from modules.make_embed import makeEmbed, Color
 from modules.chord_finder import get_chord
 
 import os
