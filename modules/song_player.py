@@ -1,3 +1,5 @@
+import time
+
 import discord
 from discord import ApplicationContext
 from discord.ext import commands
@@ -8,13 +10,14 @@ from async_timeout import timeout
 from yt_dlp import YoutubeDL
 
 from functools import partial
+import shutil
 
 from modules.make_embed import makeEmbed, Color
 
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
-    'outtmpl': 'downloads/%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'outtmpl': 'downloads/%(extractor)s-%(id)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
     'nocheckcertificate': True,
@@ -45,11 +48,14 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return self.__getattribute__(item)
 
     @classmethod
-    async def create_source(cls, ctx, url, *, loop, download=False):
+    async def create_source(cls, ctx: ApplicationContext, url, *, loop, download=False):
         try:
-            loop = loop or asyncio.get_event_loop()
+            global ytdl
 
-            ytdl.cache.remove()
+            ytdl_format_options['outtmpl'] = f'downloads/{ctx.guild.id}/%(extractor)s-%(id)s.%(ext)s'
+            ytdl = YoutubeDL(ytdl_format_options)
+
+            loop = loop or asyncio.get_event_loop()
 
             to_run = partial(ytdl.extract_info, url=url, download=download)
             data = await loop.run_in_executor(None, to_run)
@@ -142,3 +148,11 @@ async def cleanup(guild, players):
         del players[guild.id]
     except KeyError:
         pass
+
+    s = time.time()
+    while time.time() - s < 0.1:
+        try:
+            shutil.rmtree(f'downloads/{guild.id}')
+            break
+        except PermissionError:
+            pass
