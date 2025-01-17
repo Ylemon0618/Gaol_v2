@@ -73,7 +73,7 @@ class Song(commands.Cog):
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "음성 채팅방에 접속해야 합니다.", Color.error))
 
         await ctx.voice_client.disconnect()
-        return await ctx.respond("힝")
+        return await ctx.respond(embed=makeEmbed(":mute: Leave :mute:", "음성 채팅방을 떠납니다.", Color.error))
 
     # 볼륨 조절
     # Param: ctx, volume
