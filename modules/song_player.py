@@ -49,6 +49,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         try:
             loop = loop or asyncio.get_event_loop()
 
+            ytdl.cache.remove()
+
             to_run = partial(ytdl.extract_info, url=url, download=download)
             data = await loop.run_in_executor(None, to_run)
 
