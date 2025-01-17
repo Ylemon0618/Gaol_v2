@@ -216,6 +216,12 @@ class Song(commands.Cog):
 
         await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, self.queue_listed, title))
 
+    @song_commands.command(name="test")
+    async def test_(self):
+        dir = "downloads"
+        for file in os.listdir(dir):
+            os.remove(os.path.join(dir, file))
+
 
 def setup(bot):
     bot.add_cog(Song(bot))
