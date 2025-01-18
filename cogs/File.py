@@ -56,7 +56,8 @@ class File(commands.Cog):
         file_ext = file.content_type.split('/')[1]
 
         if file_ext == "webp":
-            embed = makeEmbed(":arrows_counterclockwise: Convert :arrows_counterclockwise:", "변환 할 확장자를 선택 해 주세요.", Color.success)
+            embed = makeEmbed(":arrows_counterclockwise: Convert :arrows_counterclockwise:", "변환 할 확장자를 선택 해 주세요.",
+                              Color.success)
             embed.set_image(url=file.url)
 
             await ctx.respond(embed=embed, view=ConvertMainView(file), ephemeral=True)

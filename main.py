@@ -37,6 +37,7 @@ class Bot(commands.Bot, ABC):
         else:
             raise error
 
+
 bot = Bot()
 
 
@@ -46,7 +47,8 @@ async def load_(ctx: ApplicationContext, extension: str):
         bot.load_extension(f"cogs.{extension}")
         await ctx.send("Successfully loaded the Cog.")
     else:
-        await ctx.send("레몬 전용임 ㅅㄱ")
+        await ctx.send(embed=discord.Embed(title=":error: 권한 부족 :error:").add_field(name="부족한 권한", value="Bot Owner"))
+
 
 @bot.command(name="unload")
 async def unload_(ctx: ApplicationContext, extension: str):
@@ -54,7 +56,8 @@ async def unload_(ctx: ApplicationContext, extension: str):
         bot.unload_extension(f"cogs.{extension}")
         await ctx.send("Successfully unloaded the Cog.")
     else:
-        await ctx.send("레몬 전용임 ㅅㄱ")
+        await ctx.send(embed=discord.Embed(title=":error: 권한 부족 :error:").add_field(name="부족한 권한", value="Bot Owner"))
+
 
 @bot.command(name="reload")
 async def reload_(ctx: ApplicationContext, extension: str):
@@ -62,7 +65,7 @@ async def reload_(ctx: ApplicationContext, extension: str):
         bot.reload_extension(f"cogs.{extension}")
         await ctx.send("Successfully reloaded the Cog.")
     else:
-        await ctx.send("레몬 전용임 ㅅㄱ")
+        await ctx.send(embed=discord.Embed(title=":error: 권한 부족 :error:").add_field(name="부족한 권한", value="Bot Owner"))
 
 
 bot.run(os.environ.get('TOKEN'))

@@ -5,7 +5,7 @@ from discord.ext import commands
 import asyncio
 
 from modules.make_embed import makeEmbed, Color
-from modules.song_queue_button import QueueMainView
+from modules.song_queue_button import QueueMainView, SetQueueField
 from modules.song_player import YTDLSource, SongPlayer, cleanup
 
 import os
@@ -207,14 +207,11 @@ class Song(commands.Cog):
 
         self.queue = self.players[ctx.guild.id].queue
         self.queue_listed = list(self.players[ctx.guild.id].queue._queue)
-        title = []
 
-        embed=makeEmbed(":musical_note: Queue :musical_note:", "", Color.success)
-        for i in range(min(10, len(self.queue_listed))):
-            embed.add_field(name=self.queue_listed[i].title, value="", inline=False)
-            title.append(self.queue_listed[i].title)
+        embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
+                              self.queue_listed, 0)
 
-        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, self.queue_listed, title))
+        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, self.queue_listed, 0))
 
 
 def setup(bot):
