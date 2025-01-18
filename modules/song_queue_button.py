@@ -4,38 +4,114 @@ from discord import Interaction
 import asyncio
 
 from modules.make_embed import makeEmbed, Color
+from modules.song_player import YTDLSource
+
+song_cnt = 10  # The max number of songs in one page
 
 
 class QueueMainView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list, options: list[str]):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
         super().__init__(timeout=None)
 
         self.queue = queue
         self.queue_listed = queue_listed
+        self.page = page
 
-        self.add_item(QueueMainSelect(queue, queue_listed, options))
+        self.add_item(QueueMainSelect(queue, queue_listed, page))
+
+        max_page = (len(queue_listed) - 1) // song_cnt
+        min_page = 0
+
+        if page != min_page:
+            self.add_item(QueueMainPagePrevButton(queue, queue_listed, page))
+        if page != max_page:
+            self.add_item(QueueMainPageNextButton(queue, queue_listed, page))
 
 
 class QueueMainSelect(discord.ui.Select):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list, options: list[str],):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
+        options = []
+        for idx in range(page * song_cnt, page * song_cnt + song_cnt):
+            if idx >= len(queue_listed):
+                break
+
+            options.append(discord.SelectOption(label=queue_listed[idx].title, value=f"{len(options)}"))
+
         super().__init__(
             placeholder="Choose a song",
-            options=[discord.SelectOption(label=options[i], value=str(i)) for i in range(min(10, len(options)))]
+            options=options
         )
 
         self.queue = queue
         self.queue_listed = queue_listed
+        self.page = page
+        self.options = options
 
     async def callback(self, interaction: Interaction):
         choice_num = int(self.values[0])
         choice = self.options[choice_num]
 
         embed = makeEmbed(":musical_note: Queue - selected :musical_note:", f"**{choice}**", Color.success)
-        await interaction.response.edit_message(embed=embed, view=QueueSelectedView(self.queue, self.queue_listed, choice_num))
+        await interaction.response.edit_message(embed=embed,
+                                                view=QueueSelectedView(self.queue, self.queue_listed,
+                                                                       self.page * song_cnt + choice_num))
+
+
+def SetQueueField(embed: discord.Embed, queue_listed: list[YTDLSource], page: int):
+    for idx in range(page * song_cnt, page * song_cnt + song_cnt):
+        if idx >= len(queue_listed):
+            break
+
+        embed.add_field(name=queue_listed[idx].title, value="", inline=False)
+
+    return embed
+
+
+class QueueMainPageNextButton(discord.ui.Button):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
+        super().__init__(
+            label="Next",
+            custom_id="Queue page_next",
+            style=discord.ButtonStyle.blurple
+        )
+
+        self.queue = queue
+        self.queue_listed = queue_listed
+        self.page = page
+
+    async def callback(self, interaction: Interaction):
+        self.page += 1
+
+        embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
+                              self.queue_listed, self.page)
+        await interaction.response.edit_message(embed=embed,
+                                                view=QueueMainView(self.queue, self.queue_listed, self.page))
+
+
+class QueueMainPagePrevButton(discord.ui.Button):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
+        super().__init__(
+            label="Prev",
+            custom_id="Queue page_prev",
+            style=discord.ButtonStyle.blurple
+        )
+
+        self.queue = queue
+        self.queue_listed = queue_listed
+        self.page = page
+
+    async def callback(self, interaction: Interaction):
+        self.page -= 1
+
+        embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
+                              self.queue_listed, self.page)
+
+        await interaction.response.edit_message(embed=embed,
+                                                view=QueueMainView(self.queue, self.queue_listed, self.page))
 
 
 class QueueSelectedView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list, selected: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], selected: int):
         super().__init__(timeout=None)
 
         self.queue = queue
@@ -64,8 +140,9 @@ class QueueSelectedView(discord.ui.View):
 
         await interaction.response.edit_message(embed=embed, view=QueueBackToMainView(self.queue, self.queue_listed))
 
+
 class QueueBackToMainView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource]):
         super().__init__(timeout=None)
 
         self.queue = queue
@@ -77,11 +154,7 @@ class QueueBackToMainView(discord.ui.View):
         style=discord.ButtonStyle.blurple
     )
     async def queue_back_to_main_button_callback(self, button: discord.ui.Button, interaction: Interaction):
-        title = []
+        embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
+                              self.queue_listed, 0)
 
-        embed = makeEmbed(":musical_note: Queue :musical_note:", "", Color.success)
-        for i in range(min(10, len(self.queue_listed))):
-            embed.add_field(name=self.queue_listed[i].title, value="", inline=False)
-            title.append(self.queue_listed[i].title)
-
-        await interaction.response.edit_message(embed=embed, view=QueueMainView(self.queue, self.queue_listed, title))
+        await interaction.response.edit_message(embed=embed, view=QueueMainView(self.queue, self.queue_listed, 0))
