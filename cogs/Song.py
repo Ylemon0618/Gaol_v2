@@ -201,7 +201,7 @@ class Song(commands.Cog):
                            description="Check the queue",
                            description_localizations={"ko": "대기열을 확인 및 편집합니다."})
     async def queue_(self, ctx: ApplicationContext):
-        if self.players.get(ctx.guild.id) is None:
+        if not self.players.get(ctx.guild.id).queue._queue:
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "현재 대기열이 비어있습니다.", Color.error))
 
         self.queue = self.players[ctx.guild.id].queue
