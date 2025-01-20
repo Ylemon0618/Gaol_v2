@@ -1,7 +1,7 @@
+import os
+
 import discord
 from discord import Interaction
-
-import os
 
 from modules.make_embed import makeEmbed, Color
 from .convert_file import Convert

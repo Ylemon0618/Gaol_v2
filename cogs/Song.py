@@ -1,15 +1,14 @@
+import asyncio
+import os
+
 import discord
 from discord import Option, ApplicationContext
 from discord.ext import commands
-
-import asyncio
+from dotenv import load_dotenv
 
 from modules.make_embed import makeEmbed, Color
-from modules.song_queue_button import QueueMainView, SetQueueField
 from modules.song_player import YTDLSource, SongPlayer, cleanup
-
-import os
-from dotenv import load_dotenv
+from modules.song_queue_button import QueueMainView, SetQueueField
 
 load_dotenv()
 

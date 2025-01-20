@@ -1,8 +1,8 @@
-import discord
-
-from PIL import Image
-import requests
 import os
+
+import discord
+import requests
+from PIL import Image
 
 
 async def Convert(file: discord.Attachment, ext: str):

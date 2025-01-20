@@ -1,12 +1,12 @@
+import os
+
 import discord
 from discord import Option, OptionChoice, ApplicationContext
 from discord.ext import commands
-
-from modules.make_embed import makeEmbed, Color
-from modules.convert_file import ConvertMainView, Convert
-
-import os
 from dotenv import load_dotenv
+
+from modules.convert_file import ConvertMainView, Convert
+from modules.make_embed import makeEmbed, Color
 
 load_dotenv()
 

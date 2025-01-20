@@ -1,12 +1,12 @@
+import asyncio
+
 import discord
 from discord import Interaction
-
-import asyncio
 
 from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource
 
-song_cnt = 10  # The max number of songs in one page
+song_cnt = 1  # The max number of songs in one page
 
 
 class QueueMainView(discord.ui.View):
@@ -71,6 +71,7 @@ class QueueMainPageNextButton(discord.ui.Button):
     def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
         super().__init__(
             label="Next",
+            emoji="➡️",
             custom_id="Queue page_next",
             style=discord.ButtonStyle.blurple
         )
@@ -84,6 +85,7 @@ class QueueMainPageNextButton(discord.ui.Button):
 
         embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
                               self.queue_listed, self.page)
+
         await interaction.response.edit_message(embed=embed,
                                                 view=QueueMainView(self.queue, self.queue_listed, self.page))
 
@@ -92,6 +94,7 @@ class QueueMainPagePrevButton(discord.ui.Button):
     def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
         super().__init__(
             label="Prev",
+            emoji="⬅️",
             custom_id="Queue page_prev",
             style=discord.ButtonStyle.blurple
         )

@@ -1,19 +1,15 @@
+import asyncio
+import shutil
 import time
+from functools import partial
 
 import discord
+from async_timeout import timeout
 from discord import ApplicationContext
 from discord.ext import commands
-
-import asyncio
-from async_timeout import timeout
-
 from yt_dlp import YoutubeDL
 
-from functools import partial
-import shutil
-
 from modules.make_embed import makeEmbed, Color
-
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -138,7 +134,7 @@ class SongPlayer(commands.Cog):
                 pass
 
 
-async def cleanup(guild, players):
+async def cleanup(guild: discord.Guild, players):
     try:
         await guild.voice_client.disconnect()
     except AttributeError:

@@ -1,11 +1,11 @@
+import os
+
 import discord
 from discord import Option, OptionChoice, ApplicationContext
 from discord.ext import commands
+from dotenv import load_dotenv
 
 from modules.chord_finder import get_chord
-
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 

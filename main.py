@@ -1,10 +1,9 @@
+import os
 from abc import ABC
 
 import discord
 from discord import ApplicationContext
 from discord.ext import commands
-
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
