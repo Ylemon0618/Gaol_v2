@@ -6,7 +6,7 @@ from discord import Interaction
 from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource
 
-song_cnt = 1  # The max number of songs in one page
+song_cnt = 10  # The max number of songs in one page
 
 
 class QueueMainView(discord.ui.View):
