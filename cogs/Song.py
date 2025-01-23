@@ -69,7 +69,7 @@ class Song(commands.Cog):
 
     # 음챗 나가기
     # Param: ctx
-    @song_commands.command(name="leave", name_localizations={"ko": "나가"},
+    @song_commands.command(name="leave", name_localizations={"ko": "퇴장"},
                            description="Let the bot leave",
                            description_localizations={"ko": "봇을 퇴장시킵니다."})
     async def leave_(self, ctx: ApplicationContext):
