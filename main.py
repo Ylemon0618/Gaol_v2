@@ -2,7 +2,6 @@ import os
 from abc import ABC
 
 import discord
-from discord import ApplicationContext
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -38,33 +37,5 @@ class Bot(commands.Bot, ABC):
 
 
 bot = Bot()
-
-
-@bot.command(name="load")
-async def load_(ctx: ApplicationContext, extension: str):
-    if ctx.author.id in OWNERS:
-        bot.load_extension(f"cogs.{extension}")
-        await ctx.send("Successfully loaded the Cog.")
-    else:
-        await ctx.send(embed=discord.Embed(title=":error: 권한 부족 :error:").add_field(name="부족한 권한", value="Bot Owner"))
-
-
-@bot.command(name="unload")
-async def unload_(ctx: ApplicationContext, extension: str):
-    if ctx.author.id in OWNERS:
-        bot.unload_extension(f"cogs.{extension}")
-        await ctx.send("Successfully unloaded the Cog.")
-    else:
-        await ctx.send(embed=discord.Embed(title=":error: 권한 부족 :error:").add_field(name="부족한 권한", value="Bot Owner"))
-
-
-@bot.command(name="reload")
-async def reload_(ctx: ApplicationContext, extension: str):
-    if ctx.author.id in OWNERS:
-        bot.reload_extension(f"cogs.{extension}")
-        await ctx.send("Successfully reloaded the Cog.")
-    else:
-        await ctx.send(embed=discord.Embed(title=":error: 권한 부족 :error:").add_field(name="부족한 권한", value="Bot Owner"))
-
 
 bot.run(os.environ.get('TOKEN'))
