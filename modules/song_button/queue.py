@@ -9,6 +9,15 @@ from modules.song_player import YTDLSource
 song_cnt = 10  # The max number of songs in one page
 
 
+class Title:
+    normal = ":musical_note: Queue :musical_note:"
+    selected = ":musical_note: Queue - selected :musical_note:"
+    deleted = ":musical_note: Queue - deleted :musical_note:"
+    back_to_main = ":musical_note: Queue - back to main :musical_note:"
+
+    error = ":warning: Error :warning:"
+
+
 class QueueMainView(discord.ui.View):
     def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
         super().__init__(timeout=None)
@@ -51,13 +60,13 @@ class QueueMainSelect(discord.ui.Select):
         choice_num = int(self.values[0])
         choice = self.options[choice_num]
 
-        embed = makeEmbed(":musical_note: Queue - selected :musical_note:", f"**{choice}**", Color.success)
+        embed = makeEmbed(Title.selected, f"**{choice}**", Color.success)
         await interaction.response.edit_message(embed=embed,
                                                 view=QueueSelectedView(self.queue, self.queue_listed,
                                                                        self.page * song_cnt + choice_num))
 
 
-def SetQueueField(embed: discord.Embed, queue_listed: list[YTDLSource], page: int):
+def set_queue_field(embed: discord.Embed, queue_listed: list[YTDLSource], page: int):
     for idx in range(page * song_cnt, page * song_cnt + song_cnt):
         if idx >= len(queue_listed):
             break
@@ -83,8 +92,8 @@ class QueueMainPageNextButton(discord.ui.Button):
     async def callback(self, interaction: Interaction):
         self.page += 1
 
-        embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
-                              self.queue_listed, self.page)
+        embed = set_queue_field(makeEmbed(Title.normal, "", Color.success),
+                                self.queue_listed, self.page)
 
         await interaction.response.edit_message(embed=embed,
                                                 view=QueueMainView(self.queue, self.queue_listed, self.page))
@@ -106,8 +115,8 @@ class QueueMainPagePrevButton(discord.ui.Button):
     async def callback(self, interaction: Interaction):
         self.page -= 1
 
-        embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
-                              self.queue_listed, self.page)
+        embed = set_queue_field(makeEmbed(Title.normal, "", Color.success),
+                                self.queue_listed, self.page)
 
         await interaction.response.edit_message(embed=embed,
                                                 view=QueueMainView(self.queue, self.queue_listed, self.page))
@@ -136,10 +145,10 @@ class QueueSelectedView(discord.ui.View):
                 await self.queue.put(self.queue_listed[i])
             await self.queue.get()
 
-            embed = makeEmbed(":musical_note: Queue - deleted :musical_note:",
+            embed = makeEmbed(Title.deleted,
                               f"**{self.title}**을(를) 성공적으로 대기열에서 삭제했습니다.", Color.success)
         except Exception as e:
-            embed = makeEmbed(":warning: Error :warning:", f"{e}", Color.error)
+            embed = makeEmbed(Title.error, f"{e}", Color.error)
 
         await interaction.response.edit_message(embed=embed, view=QueueBackToMainView(self.queue, self.queue_listed))
 
@@ -157,7 +166,7 @@ class QueueBackToMainView(discord.ui.View):
         style=discord.ButtonStyle.blurple
     )
     async def queue_back_to_main_button_callback(self, button: discord.ui.Button, interaction: Interaction):
-        embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
-                              self.queue_listed, 0)
+        embed = set_queue_field(makeEmbed(Title.back_to_main, "", Color.success),
+                                self.queue_listed, 0)
 
         await interaction.response.edit_message(embed=embed, view=QueueMainView(self.queue, self.queue_listed, 0))
