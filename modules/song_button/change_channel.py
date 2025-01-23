@@ -1,9 +1,4 @@
-import asyncio
-import os
-
 import discord
-from discord import Option, ApplicationContext
-from discord.ext import commands
 
 from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource
