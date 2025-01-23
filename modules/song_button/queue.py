@@ -28,12 +28,17 @@ class QueueMainView(discord.ui.View):
 
         self.add_item(QueueMainSelect(queue, queue_listed, page))
 
-        max_page = (len(queue_listed) - 1) // song_cnt
         min_page = 0
+        max_page = (len(queue_listed) - 1) // song_cnt
 
-        if page != min_page:
+        if page == min_page:
+            self.add_item(QueueMainPagePrevButton(queue, queue_listed, page, True))
+        else:
             self.add_item(QueueMainPagePrevButton(queue, queue_listed, page))
-        if page != max_page:
+
+        if page == max_page:
+            self.add_item(QueueMainPageNextButton(queue, queue_listed, page, True))
+        else:
             self.add_item(QueueMainPageNextButton(queue, queue_listed, page))
 
 
@@ -77,12 +82,13 @@ def set_queue_field(embed: discord.Embed, queue_listed: list[YTDLSource], page: 
 
 
 class QueueMainPageNextButton(discord.ui.Button):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int, disabled=False):
         super().__init__(
             label="Next",
             emoji="➡️",
             custom_id="Queue page_next",
-            style=discord.ButtonStyle.blurple
+            style=discord.ButtonStyle.blurple,
+            disabled=disabled
         )
 
         self.queue = queue
@@ -100,12 +106,13 @@ class QueueMainPageNextButton(discord.ui.Button):
 
 
 class QueueMainPagePrevButton(discord.ui.Button):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int, disabled=False):
         super().__init__(
             label="Prev",
             emoji="⬅️",
             custom_id="Queue page_prev",
-            style=discord.ButtonStyle.blurple
+            style=discord.ButtonStyle.blurple,
+            disabled=disabled
         )
 
         self.queue = queue
