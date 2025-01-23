@@ -55,12 +55,14 @@ class Song(commands.Cog):
             try:
                 await vc.move_to(channel)
             except asyncio.TimeoutError:
-                return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
+                return await ctx.respond(
+                    embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
         else:
             try:
                 await channel.connect()
             except asyncio.TimeoutError:
-                return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
+                return await ctx.respond(
+                    embed=makeEmbed(":warning: Error :warning:", "시간초과\n\n다시 시도하여 주세요.", Color.error))
 
     # 음챗 나가기
     # Param: ctx
@@ -171,9 +173,7 @@ class Song(commands.Cog):
         if not vc or not vc.is_connected():
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "현재 재생 중인 노래가 없습니다.", Color.error))
 
-        if vc.is_paused():
-            pass
-        elif not vc.is_playing():
+        if not vc.is_playing() and not vc.is_paused():
             return
 
         vc.stop()
@@ -195,7 +195,7 @@ class Song(commands.Cog):
 
         await ctx.respond(embed=makeEmbed(":no_entry: Paused :no_entry:", "노래 재생을 중지했습니다.", Color.success))
 
-    # 대기열
+    # 대기열 확인/편집
     # Param: ctx
     @song_commands.command(name="queue", name_localizations={"ko": "대기열"},
                            description="Check the queue",
