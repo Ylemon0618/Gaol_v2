@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource, SongPlayer, cleanup
-from modules.song_queue_button import QueueMainView, SetQueueField
+from modules.song_button import QueueMainView, set_queue_field, MoveChannelView, ResetQueueView
 
 load_dotenv()
 
@@ -56,7 +56,9 @@ class Song(commands.Cog):
                 return
 
             try:
-                await vc.move_to(channel)
+                return await ctx.respond(embed=makeEmbed("Confirm",
+                                                         f"현재 봇이 {vc.channel.mention}에 접속해 있습니다.\n\n{channel.mention}(으)로 옮기시려면 **확인**을 클릭 해 주세요.",
+                                                         Color.warning), view=MoveChannelView(vc, channel))
             except asyncio.TimeoutError:
                 return await ctx.respond(
                     embed=makeEmbed(error_title, "시간초과\n\n다시 시도하여 주세요.", Color.error))
@@ -66,6 +68,8 @@ class Song(commands.Cog):
             except asyncio.TimeoutError:
                 return await ctx.respond(
                     embed=makeEmbed(error_title, "시간초과\n\n다시 시도하여 주세요.", Color.error))
+
+        await ctx.respond(embed=makeEmbed(":musical_note: Joined :musical_note:", channel.mention, Color.success))
 
     # 음챗 나가기
     # Param: ctx
@@ -118,19 +122,29 @@ class Song(commands.Cog):
                     *, song: Option(str, name="song", name_localizations={"ko": "노래"},
                                     description="Enter the song to play",
                                     description_localizations={"ko": "재생 할 노래의 url이나 제목을 입력 해 주세요."})):
+        if ctx.user.voice is None:
+            return await ctx.respond(embed=makeEmbed(error_title, "음성 채팅방에 접속해야 합니다.", Color.error))
+
         await ctx.defer()
         await ctx.trigger_typing()
 
-        vc = ctx.voice_client
-
-        if not vc:
+        if not ctx.voice_client:
             await self.join_(ctx)
 
-        player = self.get_player(ctx)
+        vc = ctx.voice_client
 
-        source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
+        if vc.channel != ctx.user.voice.channel:
+            return await ctx.respond(embed=makeEmbed("Confirm",
+                                                     f"현재 봇이 {vc.channel.mention}에 접속해 있습니다.\n\n{ctx.user.voice.channel.mention}(으)로 옮기시려면 **확인**을 클릭 해 주세요.",
+                                                     Color.warning),
+                                     view=MoveChannelView(vc, ctx.user.voice.channel,
+                                                          ResetQueueView(self.bot, ctx, self.players, song)))
+        else:
+            player = self.get_player(ctx)
 
-        await player.queue.put(source)
+            source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
+
+            await player.queue.put(source)
 
     # 재생 일시정지
     # Param: ctx
@@ -210,8 +224,8 @@ class Song(commands.Cog):
         self.queue = self.players[ctx.guild.id].queue
         self.queue_listed = list(self.players[ctx.guild.id].queue._queue)
 
-        embed = SetQueueField(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
-                              self.queue_listed, 0)
+        embed = set_queue_field(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
+                                self.queue_listed, 0)
 
         await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, self.queue_listed, 0))
 
