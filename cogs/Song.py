@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource, SongPlayer, cleanup
 from modules.song_button import QueueMainView, set_queue_field, MoveChannelView, ResetQueueView
-import modules.messages.embeds as embeds
+from modules.messages import SongEmbed
 
 load_dotenv()
 
@@ -45,7 +45,7 @@ class Song(commands.Cog):
         try:
             channel = ctx.author.voice.channel
         except AttributeError:
-            return await ctx.respond(embed=embeds.Song.Error.invalid_voice)
+            return await ctx.respond(embed=SongEmbed.Error.invalid_voice)
 
         vc = ctx.voice_client
 
@@ -60,7 +60,7 @@ class Song(commands.Cog):
                                          view=MoveChannelView(vc, channel))
             except asyncio.TimeoutError:
                 return await ctx.respond(
-                    embed=embeds.Song.Error.timeout)
+                    embed=SongEmbed.Error.timeout)
         else:
             try:
                 await channel.connect()
