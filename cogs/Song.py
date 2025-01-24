@@ -21,7 +21,6 @@ class Song(commands.Cog):
         self.bot = bot
         self.players = {}
         self.queue = asyncio.Queue()
-        self.queue_listed = []
 
     song_commands = discord.SlashCommandGroup(name="song", name_localizations={"ko": "노래"},
                                               description="Commands for song",
@@ -54,19 +53,14 @@ class Song(commands.Cog):
                 return
 
             try:
-                return await ctx.respond(embed=makeEmbed("Confirm",
-                                                         f"현재 봇이 {vc.channel.mention}에 접속해 있습니다.\n\n{channel.mention}(으)로 옮기시려면 **확인**을 클릭 해 주세요.",
-                                                         Color.warning),
-                                         view=MoveChannelView(vc, channel))
+                return await ctx.respond(embed=SongEmbed.UI.convert, view=MoveChannelView(vc, channel))
             except asyncio.TimeoutError:
-                return await ctx.respond(
-                    embed=SongEmbed.Error.timeout)
+                return await ctx.respond(embed=SongEmbed.Error.timeout)
         else:
             try:
                 await channel.connect()
             except asyncio.TimeoutError:
-                return await ctx.respond(
-                    embed=makeEmbed(error_title, "시간초과\n\n다시 시도하여 주세요.", Color.error))
+                return await ctx.respond(embed=SongEmbed.Error.timeout)
 
         await ctx.respond(embed=makeEmbed(":musical_note: Joined :musical_note:", channel.mention, Color.success))
 
@@ -77,10 +71,10 @@ class Song(commands.Cog):
                            description_localizations={"ko": "봇을 퇴장시킵니다."})
     async def leave_(self, ctx: ApplicationContext):
         if ctx.voice_client is None:
-            return await ctx.respond(embed=makeEmbed(error_title, "음성 채팅방에 접속해야 합니다.", Color.error))
+            return await ctx.respond(embed=SongEmbed.Error.not_connected)
 
         await ctx.voice_client.disconnect()
-        return await ctx.respond(embed=makeEmbed(":mute: Leave :mute:", "음성 채팅방을 떠납니다.", Color.success))
+        return await ctx.respond(embed=SongEmbed.Success.leave)
 
     # 볼륨 조절
     # Param: ctx, volume
@@ -92,10 +86,10 @@ class Song(commands.Cog):
                                      description="Enter the volume (with percentage)",
                                      description_localizations={"ko": "볼륨 값을 입력 해 주세요. (1~100)"})):
         if ctx.voice_client is None:
-            return await ctx.respond(embed=makeEmbed(error_title, "음성 채팅방에 접속해야 합니다.", Color.error))
+            return await ctx.respond(embed=SongEmbed.Error.not_connected)
 
         if ctx.voice_client.source is None:
-            return await ctx.respond(embed=makeEmbed(error_title, "노래가 재생중이어야 합니다.", Color.error))
+            return await ctx.respond(embed=SongEmbed.Error.not_playing)
 
         if volume == 0:
             emoji = ":mute:"
@@ -106,7 +100,7 @@ class Song(commands.Cog):
         elif volume == 100:
             emoji = ":loudspeaker:"
         else:
-            return await ctx.respond(embed=makeEmbed(error_title, "유효하지 않은 값입니다.", Color.error))
+            return await ctx.respond(embed=SongEmbed.Error.invalid_value)
 
         ctx.voice_client.source.volume = volume / 100
 
@@ -122,7 +116,7 @@ class Song(commands.Cog):
                                     description="Enter the song to play",
                                     description_localizations={"ko": "재생 할 노래의 url이나 제목을 입력 해 주세요."})):
         if ctx.user.voice is None:
-            return await ctx.respond(embed=makeEmbed(error_title, "음성 채팅방에 접속해야 합니다.", Color.error))
+            return await ctx.respond(embed=SongEmbed.Error.not_connected)
 
         await ctx.defer()
         await ctx.trigger_typing()
@@ -154,12 +148,12 @@ class Song(commands.Cog):
         vc = ctx.voice_client
 
         if not vc or not vc.is_playing():
-            return await ctx.respond(embed=no_song_embed)
+            return await ctx.respond(embed=SongEmbed.Error.not_playing)
         elif vc.is_paused():
             return
 
         vc.pause()
-        await ctx.respond(embed=makeEmbed(":no_entry: Paused :no_entry:", "재생 중인 노래를 일시정지 했습니다.", Color.success))
+        await ctx.respond(embed=SongEmbed.Success.pause)
 
     # 재생 재개
     # Param: ctx
@@ -170,13 +164,12 @@ class Song(commands.Cog):
         vc = ctx.voice_client
 
         if not vc or not vc.is_connected():
-            return await ctx.respond(embed=makeEmbed(error_title, "현재 재생이 중지된 노래가 없습니다.", Color.error))
+            return await ctx.respond(embed=SongEmbed.Error.not_paused)
         elif not vc.is_paused():
             return
 
         vc.resume()
-        await ctx.respond(embed=makeEmbed(":musical_note: Resumed :musical_note:",
-                                          "일시정지 된 노래를 다시 재생했습니다.", Color.success))
+        await ctx.respond(embed=SongEmbed.Success.resume)
 
     # 노래 스킵
     # Param: ctx
@@ -187,14 +180,13 @@ class Song(commands.Cog):
         vc = ctx.voice_client
 
         if not vc or not vc.is_connected():
-            return await ctx.respond(embed=no_song_embed)
+            return await ctx.respond(embed=SongEmbed.Error.not_playing)
 
         if not vc.is_playing() and not vc.is_paused():
             return
 
         vc.stop()
-        await ctx.respond(embed=makeEmbed(":musical_note: Skipped :musical_note:",
-                                          "노래를 스킵했습니다.", Color.success))
+        await ctx.respond(embed=SongEmbed.Success.skip)
 
     # 노래 중지
     # Param: ctx
@@ -205,11 +197,11 @@ class Song(commands.Cog):
         vc = ctx.voice_client
 
         if not vc or not vc.is_connected():
-            return await ctx.respond(embed=no_song_embed)
+            return await ctx.respond(embed=SongEmbed.Error.not_playing)
 
         await cleanup(ctx.guild, self.players)
 
-        await ctx.respond(embed=makeEmbed(":no_entry: Paused :no_entry:", "노래 재생을 중지했습니다.", Color.success))
+        await ctx.respond(embed=SongEmbed.Success.stop)
 
     # 대기열 확인/편집
     # Param: ctx
@@ -218,15 +210,15 @@ class Song(commands.Cog):
                            description_localizations={"ko": "대기열을 확인 및 편집합니다."})
     async def queue_(self, ctx: ApplicationContext):
         if not self.players.get(ctx.guild.id).queue._queue:
-            return await ctx.respond(embed=makeEmbed(error_title, "현재 대기열이 비어있습니다.", Color.error))
+            return await ctx.respond(embed=SongEmbed.Error.empty_queue)
 
         self.queue = self.players[ctx.guild.id].queue
-        self.queue_listed = list(self.players[ctx.guild.id].queue._queue)
+        queue_listed = list(self.players[ctx.guild.id].queue._queue)
 
         embed = set_queue_field(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
-                                self.queue_listed, 0)
+                                queue_listed, 0)
 
-        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, self.queue_listed, 0))
+        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, queue_listed, 0))
 
 
 def setup(bot):
