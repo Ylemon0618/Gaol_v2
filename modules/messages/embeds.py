@@ -1,7 +1,7 @@
 from modules.make_embed import makeEmbed, Color
 
 
-class Song:
+class SongEmbed:
     def __init__(self):
         pass
 
