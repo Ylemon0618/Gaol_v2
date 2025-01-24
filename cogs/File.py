@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from modules.convert_file import ConvertMainView, Convert
 from modules.make_embed import makeEmbed, Color
+from modules.messages import Song
 
 load_dotenv()
 
@@ -51,13 +52,12 @@ class File(commands.Cog):
                                     description="Upload a WebP or image file to convert",
                                     description_localizations={"ko": "변환할 WebP 또는 이미지 파일을 업로드 해 주세요."})):
         if file.content_type.split('/')[0] != "image":
-            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "올바른 파일이 아닙니다.", Color.error))
+            return await ctx.respond(embed=Song.Error.invalid_file)
 
         file_ext = file.content_type.split('/')[1]
 
         if file_ext == "webp":
-            embed = makeEmbed(":arrows_counterclockwise: Convert :arrows_counterclockwise:", "변환 할 확장자를 선택 해 주세요.",
-                              Color.success)
+            embed = Song.UI.convert
             embed.set_image(url=file.url)
 
             await ctx.respond(embed=embed, view=ConvertMainView(file), ephemeral=True)

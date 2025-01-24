@@ -9,13 +9,11 @@ from dotenv import load_dotenv
 from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource, SongPlayer, cleanup
 from modules.song_button import QueueMainView, set_queue_field, MoveChannelView, ResetQueueView
+import modules.messages.embeds as embeds
 
 load_dotenv()
 
 guild_ids = list(map(int, os.environ.get('GUILDS').split()))
-
-error_title = ":warning: Error :warning:"
-no_song_embed = makeEmbed(error_title, "현재 재생 중인 노래가 없습니다.", Color.error)
 
 
 class Song(commands.Cog):
@@ -47,7 +45,7 @@ class Song(commands.Cog):
         try:
             channel = ctx.author.voice.channel
         except AttributeError:
-            return await ctx.respond(embed=makeEmbed(error_title, "유효하지 않은 음성 채팅방입니다.", Color.error))
+            return await ctx.respond(embed=embeds.Song.Error.invalid_voice)
 
         vc = ctx.voice_client
 
@@ -58,10 +56,11 @@ class Song(commands.Cog):
             try:
                 return await ctx.respond(embed=makeEmbed("Confirm",
                                                          f"현재 봇이 {vc.channel.mention}에 접속해 있습니다.\n\n{channel.mention}(으)로 옮기시려면 **확인**을 클릭 해 주세요.",
-                                                         Color.warning), view=MoveChannelView(vc, channel))
+                                                         Color.warning),
+                                         view=MoveChannelView(vc, channel))
             except asyncio.TimeoutError:
                 return await ctx.respond(
-                    embed=makeEmbed(error_title, "시간초과\n\n다시 시도하여 주세요.", Color.error))
+                    embed=embeds.Song.Error.timeout)
         else:
             try:
                 await channel.connect()
