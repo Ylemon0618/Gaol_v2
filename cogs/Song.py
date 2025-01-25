@@ -209,13 +209,22 @@ class Song(commands.Cog):
                            description="Check the queue",
                            description_localizations={"ko": "대기열을 확인 및 편집합니다."})
     async def queue_(self, ctx: ApplicationContext):
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_playing():
+            return await ctx.respond(embed=SongEmbed.Error.not_playing)
+
         if not self.players.get(ctx.guild.id).queue._queue:
-            return await ctx.respond(embed=SongEmbed.Error.empty_queue)
+            return await ctx.respond(embed=makeEmbed(":musical_note: Queue :musical_note:",
+                                                     f"**Now Playing**\n> {self.get_player(ctx).current.title}",
+                                                     Color.success))
 
         self.queue = self.players[ctx.guild.id].queue
         queue_listed = list(self.players[ctx.guild.id].queue._queue)
 
-        embed = set_queue_field(makeEmbed(":musical_note: Queue :musical_note:", "", Color.success),
+        embed = set_queue_field(makeEmbed(":musical_note: Queue :musical_note:",
+                                          f"**Now Playing**\n> {self.get_player(ctx).current.title}",
+                                          Color.success),
                                 queue_listed, 0)
 
         await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, queue_listed, 0))
