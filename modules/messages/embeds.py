@@ -20,6 +20,7 @@ class SongEmbed:
         not_found = makeEmbed(error_title, "노래를 찾을 수 없습니다.", Color.error)
         not_paused = makeEmbed(error_title, "현재 재생이 중지된 노래가 없습니다.", Color.error)
         not_playing = makeEmbed(error_title, "노래가 재생중이어야 합니다.", Color.error)
+        not_repeating = makeEmbed(error_title, "대기열을 반복하고 있지 않습니다.", Color.error)
 
         timeout = makeEmbed(error_title, "시간초과\n\n다시 시도하여 주세요.", Color.error)
 
@@ -30,6 +31,7 @@ class SongEmbed:
         skip = makeEmbed(":musical_note: Skipped :musical_note:", "노래를 스킵했습니다.", Color.success)
         stop = makeEmbed(":musical_note: Stopped :musical_note:", "노래 재생을 중지했습니다.", Color.success)
         repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열을 반복합니다.", Color.success)
+        stop_repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열 반복을 중지했습니다..", Color.success)
 
     class UI:
         convert = makeEmbed(":arrows_counterclockwise: Convert :arrows_counterclockwise:",

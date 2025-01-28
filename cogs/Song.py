@@ -290,6 +290,28 @@ class Song(commands.Cog):
                                                 send_message=False)
         await player.queue.put(source)
 
+    # 반복 중지
+    # Param: ctx
+    @song_commands.command(name="stop_repeat", name_localizations={"ko": "반복중지"},
+                           description="Stop the repeat",
+                           description_localizations={"ko": "반복을 중지합니다."})
+    async def stop_repeat_(self, ctx: ApplicationContext):
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_playing():
+            return await ctx.respond(embed=SongEmbed.Error.not_playing)
+
+        player = self.get_player(ctx)
+
+        if not player.repeat:
+            return await ctx.respond(embed=SongEmbed.Error.not_repeating)
+
+        player.repeat = False
+        player.repeat_count = player.repeat_count_max = 0
+        player.first = None
+
+        await ctx.respond(embed=SongEmbed.Success.stop_repeat)
+
 
 def setup(bot):
     bot.add_cog(Song(bot))
