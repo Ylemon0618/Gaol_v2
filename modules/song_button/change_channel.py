@@ -62,7 +62,10 @@ class ResetQueueView(discord.ui.View):
 
         source = await YTDLSource.create_source(self.ctx, url=self.song, loop=self.bot.loop, download=True)
 
-        return await player.queue.put(source)
+        await player.queue.put(source)
+
+        if not player.repeat:
+            player.queue_list.append(source)
 
     @discord.ui.button(
         label="대기열 초기화 및 재생",
@@ -81,4 +84,7 @@ class ResetQueueView(discord.ui.View):
 
         source = await YTDLSource.create_source(self.ctx, url=self.song, loop=self.bot.loop, download=True)
 
-        return await player.queue.put(source)
+        await player.queue.put(source)
+
+        if not player.repeat:
+            player.queue_list.append(source)

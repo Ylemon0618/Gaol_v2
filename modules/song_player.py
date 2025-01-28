@@ -44,7 +44,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return self.__getattribute__(item)
 
     @classmethod
-    async def create_source(cls, ctx: ApplicationContext, url, *, loop, download=False):
+    async def create_source(cls, ctx: ApplicationContext, url, *, loop, download=False, send_message=True):
         try:
             global ytdl
 
@@ -59,7 +59,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
             if 'entries' in data:
                 data = data['entries'][0]
 
-            await ctx.respond(f"[**{data['title']}**]({data['webpage_url']}) successfully added to queue")
+            if send_message:
+                await ctx.respond(f"[**{data['title']}**](<{data['webpage_url']}>) successfully added to queue")
 
             if download:
                 source = ytdl.prepare_filename(data)
@@ -82,17 +83,23 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 class SongPlayer(commands.Cog):
     def __init__(self, ctx: ApplicationContext, players):
+        self.ctx = ctx
         self.bot = ctx.bot
         self._guild = ctx.guild
         self._channel = ctx.channel
         self._cog = ctx.cog
 
         self.queue = asyncio.Queue()
+        self.queue_list = []
         self.next = asyncio.Event()
 
         self.now_playing = None
         self.volume = 0.5
         self.current = None
+
+        self.repeat = False
+        self.repeat_count = 0
+        self.first = None
 
         self.players = players
 
@@ -107,6 +114,20 @@ class SongPlayer(commands.Cog):
             try:
                 async with timeout(300):
                     source = await self.queue.get()
+
+                    if self.repeat:
+                        if source.url == self.first.url:
+                            self.repeat_count -= 1
+
+                        if self.repeat_count == 0:
+                            self.repeat = False
+                            self.first = None
+
+                        source_new = await YTDLSource.create_source(self.ctx, url=source.url, loop=self.bot.loop,
+                                                                    download=True, send_message=False)
+                        await self.queue.put(source_new)
+                    else:
+                        self.queue_list.pop(0)
             except asyncio.TimeoutError:
                 return self.bot.loop.create_task(cleanup(self._guild, self.players))
 
@@ -122,7 +143,9 @@ class SongPlayer(commands.Cog):
 
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
             self.now_playing = await self._channel.send(embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                                                                        f"(**{source.title}**)[{source.url}", Color.success))
+                                                                        f"[**{source.title}**](<{source.url}>)",
+                                                                        Color.success))
+
             await self.next.wait()
 
             source.cleanup()

@@ -29,8 +29,11 @@ class SongEmbed:
         resume = makeEmbed(":musical_note: Resumed :musical_note:", "일시정지 된 노래를 다시 재생했습니다.", Color.success)
         skip = makeEmbed(":musical_note: Skipped :musical_note:", "노래를 스킵했습니다.", Color.success)
         stop = makeEmbed(":musical_note: Stopped :musical_note:", "노래 재생을 중지했습니다.", Color.success)
+        repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열을 반복합니다.", Color.success)
 
     class UI:
         convert = makeEmbed(":arrows_counterclockwise: Convert :arrows_counterclockwise:",
                             "변환 할 확장자를 선택 해 주세요.",
                             Color.success)
+
+        repeat_confirm = makeEmbed("Confirm", f"이미 대기열을 반복중입니다.", Color.warning)

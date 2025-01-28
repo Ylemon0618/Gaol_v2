@@ -49,7 +49,7 @@ class QueueMainSelect(discord.ui.Select):
             if idx >= len(queue_listed):
                 break
 
-            options.append(discord.SelectOption(label=queue_listed[idx].title, value=f"{len(options)}"))
+            options.append(discord.SelectOption(label=queue_listed[idx].title, value=f"{idx}"))
 
         super().__init__(
             placeholder="Choose a song",

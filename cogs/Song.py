@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource, SongPlayer, cleanup
-from modules.song_button import QueueMainView, set_queue_field, MoveChannelView, ResetQueueView
+from modules.song_button import QueueMainView, set_queue_field, MoveChannelView, ResetQueueView, ChangeRepeatView
 from modules.messages import SongEmbed
 
 load_dotenv()
@@ -138,6 +138,10 @@ class Song(commands.Cog):
             source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
 
             await player.queue.put(source)
+            player.queue_list.append(source)
+
+            if player.repeat:
+                pass
 
     # 재생 일시정지
     # Param: ctx
@@ -214,20 +218,77 @@ class Song(commands.Cog):
         if not vc or not vc.is_playing():
             return await ctx.respond(embed=SongEmbed.Error.not_playing)
 
-        if not self.players.get(ctx.guild.id).queue._queue:
+        player = self.get_player(ctx)
+
+        if self.players[ctx.guild.id].queue.empty():
             return await ctx.respond(embed=makeEmbed(":musical_note: Queue :musical_note:",
-                                                     f"**Now Playing**\n> {self.get_player(ctx).current.title}",
+                                                     f"**Now Playing**\n> {player.current.title}",
                                                      Color.success))
 
         self.queue = self.players[ctx.guild.id].queue
-        queue_listed = list(self.players[ctx.guild.id].queue._queue)
+        queue_list = self.players[ctx.guild.id].queue_list
 
-        embed = set_queue_field(makeEmbed(":musical_note: Queue :musical_note:",
-                                          f"**Now Playing**\n> {self.get_player(ctx).current.title}",
-                                          Color.success),
-                                queue_listed, 0)
+        embed = makeEmbed(":musical_note: Queue :musical_note:",
+                          f"**Now Playing**\n> {player.current.title}",
+                          Color.success)
 
-        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, queue_listed, 0))
+        if player.repeat:
+            embed.description += f"\n\n:arrows_counterclockwise: **Repeating** :arrows_counterclockwise:"
+
+            if player.repeat_count_max != -1:
+                embed.description += f"\n> {player.repeat_count_max - player.repeat_count} / {player.repeat_count_max}"
+
+        embed = set_queue_field(embed, queue_list, 0)
+
+        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, queue_list, 0))
+
+    # 대기열 반복
+    # Param: ctx, 횟수
+    @song_commands.command(name="repeat", name_localizations={"ko": "반복"},
+                           description="Repeat the queue",
+                           description_localizations={"ko": "대기열을 반복합니다."})
+    async def repeat_(self, ctx: ApplicationContext,
+                      count: Option(int, name="count", name_localizations={"ko": "횟수"},
+                                    description="Enter the count to repeat",
+                                    description_localizations={"ko": "반복 횟수를 입력 해 주세요."}) = None):
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_playing():
+            return await ctx.respond(embed=SongEmbed.Error.not_playing)
+
+        if count and count <= 1:
+            return await ctx.respond(embed=SongEmbed.Error.invalid_value)
+
+        player = self.get_player(ctx)
+
+        if player.repeat:
+            embed = SongEmbed.UI.repeat_confirm.copy()
+
+            if player.repeat_count_max != -1:
+                embed.description += f"({player.repeat_count_max - player.repeat_count} / {player.repeat_count_max})"
+            embed.description += "\n\n반복 정보를 수정하시려면 **확인**을 클릭 해 주세요."
+
+            return await ctx.respond(embed=embed, view=ChangeRepeatView(ctx, self.bot, self.players, count))
+
+        embed = SongEmbed.Success.repeat
+
+        if count:
+            player.repeat_count = count - 1
+            player.repeat_count_max = count
+
+            embed.description = f"대기열을 {count}번 반복합니다."
+        else:
+            player.repeat_count = player.repeat_count_max = -1
+
+        await ctx.respond(embed=embed)
+
+        player.repeat = True
+        player.first = player.current
+        player.queue_list = [player.first] + list(player.queue._queue)
+
+        source = await YTDLSource.create_source(ctx, url=player.current.url, loop=self.bot.loop, download=True,
+                                                send_message=False)
+        await player.queue.put(source)
 
 
 def setup(bot):
