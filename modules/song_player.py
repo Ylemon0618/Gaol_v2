@@ -59,7 +59,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             if 'entries' in data:
                 data = data['entries'][0]
 
-            await ctx.respond(f"[**{data['title']}**]({data['webpage_url']}) successfully added to queue")
+            await ctx.respond(f"[**{data['title']}**](<{data['webpage_url']}>) successfully added to queue")
 
             if download:
                 source = ytdl.prepare_filename(data)
@@ -122,7 +122,7 @@ class SongPlayer(commands.Cog):
 
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
             self.now_playing = await self._channel.send(embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                                                                        f"[**{source.title}**]({source.url})", Color.success))
+                                                                        f"[**{source.title}**](<{source.url}>)", Color.success))
             await self.next.wait()
 
             source.cleanup()
