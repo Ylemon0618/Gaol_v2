@@ -309,6 +309,7 @@ class Song(commands.Cog):
         player.repeat = False
         player.repeat_count = player.repeat_count_max = 0
         player.first = None
+        player.queue_list = list(player.queue._queue)
 
         await ctx.respond(embed=SongEmbed.Success.stop_repeat)
 
