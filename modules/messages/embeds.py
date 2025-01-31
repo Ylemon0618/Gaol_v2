@@ -31,7 +31,7 @@ class SongEmbed:
         skip = makeEmbed(":musical_note: Skipped :musical_note:", "노래를 스킵했습니다.", Color.success)
         stop = makeEmbed(":musical_note: Stopped :musical_note:", "노래 재생을 중지했습니다.", Color.success)
         repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열을 반복합니다.", Color.success)
-        stop_repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열 반복을 중지했습니다..", Color.success)
+        stop_repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열 반복을 중지했습니다.", Color.success)
 
     class UI:
         convert = makeEmbed(":arrows_counterclockwise: Convert :arrows_counterclockwise:",
