@@ -143,11 +143,14 @@ class QueueSelectedView(discord.ui.View):
     )
     async def queue_delete_button_callback(self, button: discord.ui.Button, interaction: Interaction):
         try:
-            self.queue_listed.pop(self.selected)
+            selected_source = self.queue_listed.pop(self.selected)
 
             for i in range(len(self.queue_listed)):
-                await self.queue.get()
-                await self.queue.put(self.queue_listed[i])
+                source = await self.queue.get()
+
+                if source == selected_source:
+                    continue
+                await self.queue.put(source)
             await self.queue.get()
 
             embed = makeEmbed(Title.deleted,
