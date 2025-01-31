@@ -58,7 +58,6 @@ class QueueMainSelect(discord.ui.Select):
         self.queue = queue
         self.queue_listed = queue_listed
         self.page = page
-        self.options = options
 
     async def callback(self, interaction: Interaction):
         choice_num = int(self.values[0])
@@ -157,6 +156,17 @@ class QueueSelectedView(discord.ui.View):
             embed = makeEmbed(Title.error, f"{e}", Color.error)
 
         await interaction.response.edit_message(embed=embed, view=QueueBackToMainView(self.queue, self.queue_listed))
+
+    @discord.ui.button(
+        label="취소",
+        custom_id="Queue cancel",
+        style=discord.ButtonStyle.gray
+    )
+    async def queue_cancel_button_callback(self, button: discord.ui.Button, interaction: Interaction):
+        embed = set_queue_field(makeEmbed(Title.back_to_main, "", Color.success),
+                                self.queue_listed, 0)
+
+        await interaction.response.edit_message(embed=embed, view=QueueMainView(self.queue, self.queue_listed, 0))
 
 
 class QueueBackToMainView(discord.ui.View):
