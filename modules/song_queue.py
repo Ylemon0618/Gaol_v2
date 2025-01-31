@@ -96,7 +96,7 @@ class QueueMainPageNextButton(discord.ui.Button):
     async def callback(self, interaction: Interaction):
         self.page += 1
 
-        embed = set_queue_field(makeEmbed(Title.normal, "", Color.success),
+        embed = set_queue_field(makeEmbed(Title.normal, interaction.message.embeds[0].description, Color.success),
                                 self.queue_listed, self.page)
 
         await interaction.response.edit_message(embed=embed,
@@ -120,7 +120,7 @@ class QueueMainPagePrevButton(discord.ui.Button):
     async def callback(self, interaction: Interaction):
         self.page -= 1
 
-        embed = set_queue_field(makeEmbed(Title.normal, "", Color.success),
+        embed = set_queue_field(makeEmbed(Title.normal, interaction.message.embeds[0].description, Color.success),
                                 self.queue_listed, self.page)
 
         await interaction.response.edit_message(embed=embed,
