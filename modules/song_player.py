@@ -55,7 +55,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             loop = loop or asyncio.get_event_loop()
 
             to_run = partial(ytdl.extract_info, url=url, download=download)
-            data = await loop.run_in_executor(None, to_run, None)
+            data = await loop.run_in_executor(None, to_run)
 
             if 'entries' in data:
                 data = data['entries'][0]
@@ -77,7 +77,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
 
         to_run = partial(ytdl.extract_info, url=data['webpage_url'], download=False)
-        data = await loop.run_in_executor(None, to_run, None)
+        data = await loop.run_in_executor(None, to_run)
 
         return cls(discord.FFmpegPCMAudio(data['url']), data=data)
 
