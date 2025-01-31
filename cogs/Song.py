@@ -1,10 +1,11 @@
 import asyncio
 import os
+from dotenv import load_dotenv
 
 import discord
 from discord import Option, ApplicationContext
 from discord.ext import commands
-from dotenv import load_dotenv
+from pytube import Playlist
 
 from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource, SongPlayer, cleanup, add_to_queue, edit_queue_message
@@ -135,9 +136,28 @@ class Song(commands.Cog):
                                                           ResetQueueView(self.bot, ctx, self.players, song)))
         else:
             player = self.get_player(ctx)
-            source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
 
-            await add_to_queue(player, source)
+            if "&list=" in song:
+                downloading = await ctx.respond(embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
+                                                                "플레이리스트를 다운로드 중입니다...", Color.success))
+
+                pl = Playlist(song)
+
+                songs = pl.video_urls if len(pl.video_urls) <= 20 else pl.video_urls[:20]
+                if not pl.video_urls:
+                    songs = [song]
+
+                for url in songs:
+                    source = await YTDLSource.create_source(ctx, url=url, loop=self.bot.loop, download=True,
+                                                            send_message=False)
+
+                    await add_to_queue(player, source)
+
+                await downloading.edit(f"{len(songs)} of songs in the playlist successfully added to queue", embed=None)
+            else:
+                source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
+
+                await add_to_queue(player, source)
 
     # 재생 일시정지
     # Param: ctx
