@@ -7,8 +7,9 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from modules.make_embed import makeEmbed, Color
-from modules.song_player import YTDLSource, SongPlayer, cleanup, add_to_queue
-from modules.song_button import QueueMainView, set_queue_field, MoveChannelView, ResetQueueView, ChangeRepeatView
+from modules.song_player import YTDLSource, SongPlayer, cleanup, add_to_queue, edit_queue_message
+from modules.song_change import MoveChannelView, ResetQueueView, ChangeRepeatView
+from modules.song_queue import QueueMainView, set_queue_field
 from modules.messages import SongEmbed
 
 load_dotenv()
@@ -215,17 +216,12 @@ class Song(commands.Cog):
 
         player = self.get_player(ctx)
 
-        if self.players[ctx.guild.id].queue.empty():
-            return await ctx.respond(embed=makeEmbed(":musical_note: Queue :musical_note:",
-                                                     f"**Now Playing**\n> {player.current.title}",
-                                                     Color.success))
-
-        self.queue = self.players[ctx.guild.id].queue
-        queue_list = self.players[ctx.guild.id].queue_list
-
         embed = makeEmbed(":musical_note: Queue :musical_note:",
                           f"**Now Playing**\n> {player.current.title}",
                           Color.success)
+
+        self.queue = player.queue
+        queue_list = player.queue_list
 
         if player.repeat:
             embed.description += f"\n\n:arrows_counterclockwise: **Repeating** :arrows_counterclockwise:"
@@ -233,9 +229,17 @@ class Song(commands.Cog):
             if player.repeat_count_max != -1:
                 embed.description += f"\n> {player.repeat_count_max - player.repeat_count} / {player.repeat_count_max}"
 
-        embed = set_queue_field(embed, queue_list, 0)
+        if not player.queue.empty():
+            embed = set_queue_field(embed, queue_list, 0)
 
-        await ctx.respond(embed=embed, view=QueueMainView(self.players[ctx.guild.id].queue, queue_list, 0))
+        message = await ctx.respond(embed=embed,
+                                    view=None if player.queue.empty() else
+                                    QueueMainView(player.queue, queue_list, 0))
+
+        if ctx.channel.id in player.queue_message:
+            await player.queue_message[ctx.channel.id].delete_original_response()
+
+        player.queue_message[ctx.channel.id] = message
 
     # 대기열 반복
     # Param: ctx, 횟수
@@ -284,6 +288,9 @@ class Song(commands.Cog):
         source = await YTDLSource.create_source(ctx, url=player.current.url, loop=self.bot.loop, download=True,
                                                 send_message=False)
         await player.queue.put(source)
+
+        if player.queue_message:
+            await edit_queue_message(player, player.current)
 
     # 반복 중지
     # Param: ctx

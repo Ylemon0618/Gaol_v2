@@ -4,7 +4,6 @@ import discord
 from discord import Interaction
 
 from modules.make_embed import makeEmbed, Color
-from modules.song_player import YTDLSource
 
 song_cnt = 10  # The max number of songs in one page
 
@@ -19,7 +18,7 @@ class Title:
 
 
 class QueueMainView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, page: int):
         super().__init__(timeout=None)
 
         self.queue = queue
@@ -43,7 +42,7 @@ class QueueMainView(discord.ui.View):
 
 
 class QueueMainSelect(discord.ui.Select):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, page: int):
         options = []
         for idx in range(page * song_cnt, page * song_cnt + song_cnt):
             if idx >= len(queue_listed):
@@ -71,7 +70,7 @@ class QueueMainSelect(discord.ui.Select):
                                                                        self.page * song_cnt + choice_num))
 
 
-def set_queue_field(embed: discord.Embed, queue_listed: list[YTDLSource], page: int):
+def set_queue_field(embed: discord.Embed, queue_listed: list, page: int):
     for idx in range(page * song_cnt, page * song_cnt + song_cnt):
         if idx >= len(queue_listed):
             break
@@ -82,7 +81,7 @@ def set_queue_field(embed: discord.Embed, queue_listed: list[YTDLSource], page: 
 
 
 class QueueMainPageNextButton(discord.ui.Button):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int, disabled=False):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, page: int, disabled=False):
         super().__init__(
             label="Next",
             emoji="➡️",
@@ -106,7 +105,7 @@ class QueueMainPageNextButton(discord.ui.Button):
 
 
 class QueueMainPagePrevButton(discord.ui.Button):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], page: int, disabled=False):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, page: int, disabled=False):
         super().__init__(
             label="Prev",
             emoji="⬅️",
@@ -130,7 +129,7 @@ class QueueMainPagePrevButton(discord.ui.Button):
 
 
 class QueueSelectedView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource], selected: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, selected: int):
         super().__init__(timeout=None)
 
         self.queue = queue
@@ -161,7 +160,7 @@ class QueueSelectedView(discord.ui.View):
 
 
 class QueueBackToMainView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list[YTDLSource]):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list):
         super().__init__(timeout=None)
 
         self.queue = queue

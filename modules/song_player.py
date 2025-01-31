@@ -11,6 +11,7 @@ from discord.ext import commands
 from yt_dlp import YoutubeDL
 
 from modules.make_embed import makeEmbed, Color
+from modules.song_queue import QueueMainView, set_queue_field
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -102,6 +103,8 @@ class SongPlayer(commands.Cog):
         self.repeat_count = 0
         self.first = None
 
+        self.queue_message = {}
+
         self.players = players
 
         ctx.bot.loop.create_task(self.player_loop())
@@ -130,7 +133,13 @@ class SongPlayer(commands.Cog):
                         await self.queue.put(source_new)
                     else:
                         self.queue_list.pop(0)
+
+                    if self.queue_message:
+                        await edit_queue_message(self, source)
             except asyncio.TimeoutError:
+                for message in self.queue_message.values():
+                    await message.delete()
+
                 return self.bot.loop.create_task(cleanup(self._guild, self.players))
 
             if not isinstance(source, YTDLSource):
@@ -143,10 +152,13 @@ class SongPlayer(commands.Cog):
             source.volume = self.volume
             self.current = source
 
-            self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-            self.now_playing = await self._channel.send(embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                                                                        f"[**{source.title}**](<{source.url}>)",
-                                                                        Color.success))
+            try:
+                self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+                self.now_playing = await self._channel.send(embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
+                                                                            f"[**{source.title}**](<{source.url}>)",
+                                                                            Color.success))
+            except AttributeError:
+                pass
 
             await self.next.wait()
 
@@ -180,18 +192,49 @@ async def cleanup(guild: discord.Guild, players):
 
 async def add_to_queue(player: SongPlayer, source: YTDLSource) -> None:
     if player.repeat:
-        old_queue = deepcopy(player.queue)
-        new_queue = asyncio.Queue()
+        if player.queue.qsize() == 1:
+            new_queue = asyncio.Queue()
 
-        for _ in range(player.queue.qsize()):
-            cur = await old_queue.get()
-            await new_queue.put(cur)
+            await new_queue.put(source)
+            await new_queue.put(player.queue._queue[0])
 
-            if cur == player.queue_list[-1]:
-                await new_queue.put(source)
-                player.queue_list.append(source)
+            player.queue_list.append(source)
 
-        player.queue = new_queue
+            player.queue = new_queue
+        else:
+            new_queue = asyncio.Queue()
+
+            for cur in list(player.queue._queue):
+                await new_queue.put(cur)
+
+                if cur.url == player.queue_list[-1].url:
+                    await new_queue.put(source)
+                    player.queue_list.append(source)
+
+            player.queue = new_queue
     else:
         await player.queue.put(source)
         player.queue_list.append(source)
+
+    if player.queue_message:
+        await edit_queue_message(player, player.current)
+
+
+async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
+    embed = makeEmbed(":musical_note: Queue :musical_note:",
+                      f"**Now Playing**\n> {source.title}",
+                      Color.success)
+
+    if player.repeat:
+        embed.description += f"\n\n:arrows_counterclockwise: **Repeating** :arrows_counterclockwise:"
+
+        if player.repeat_count_max != -1:
+            embed.description += f"\n> {player.repeat_count_max - player.repeat_count} / {player.repeat_count_max}"
+
+    if not player.queue.empty():
+        embed = set_queue_field(embed, player.queue_list, 0)
+
+    for message in player.queue_message.values():
+        await message.edit(embed=embed,
+                           view=None if player.queue.empty() else
+                           QueueMainView(player.queue, player.queue_list, 0))
