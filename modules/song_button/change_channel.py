@@ -1,7 +1,7 @@
 import discord
 
 from modules.make_embed import makeEmbed, Color
-from modules.song_player import YTDLSource
+from modules.song_player import YTDLSource, SongPlayer, add_to_queue
 
 
 class MoveChannelView(discord.ui.View):
@@ -59,13 +59,9 @@ class ResetQueueView(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=None)
 
         player = self.players[self.guild.id]
-
         source = await YTDLSource.create_source(self.ctx, url=self.song, loop=self.bot.loop, download=True)
 
-        await player.queue.put(source)
-
-        if not player.repeat:
-            player.queue_list.append(source)
+        await add_to_queue(player, source)
 
     @discord.ui.button(
         label="대기열 초기화 및 재생",
@@ -77,14 +73,15 @@ class ResetQueueView(discord.ui.View):
         await interaction.response.edit_message(
             embed=makeEmbed(":no_entry: Reset :no_entry:", "대기열을 초기화했습니다.", Color.success), view=None)
 
-        while self.ctx.voice_client.is_playing():
-            self.ctx.voice_client.stop()
-
         player = self.players[self.guild.id]
+
+        player.queue.task_done()
+
+        del self.players[self.ctx.guild.id]
+        player = SongPlayer(self.ctx, self.players)
+        self.players[self.ctx.guild.id] = player
 
         source = await YTDLSource.create_source(self.ctx, url=self.song, loop=self.bot.loop, download=True)
 
         await player.queue.put(source)
-
-        if not player.repeat:
-            player.queue_list.append(source)
+        player.queue_list.append(source)

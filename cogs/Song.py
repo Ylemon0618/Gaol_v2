@@ -7,7 +7,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from modules.make_embed import makeEmbed, Color
-from modules.song_player import YTDLSource, SongPlayer, cleanup
+from modules.song_player import YTDLSource, SongPlayer, cleanup, add_to_queue
 from modules.song_button import QueueMainView, set_queue_field, MoveChannelView, ResetQueueView, ChangeRepeatView
 from modules.messages import SongEmbed
 
@@ -134,14 +134,9 @@ class Song(commands.Cog):
                                                           ResetQueueView(self.bot, ctx, self.players, song)))
         else:
             player = self.get_player(ctx)
-
             source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
 
-            await player.queue.put(source)
-            player.queue_list.append(source)
-
-            if player.repeat:
-                pass
+            await add_to_queue(player, source)
 
     # 재생 일시정지
     # Param: ctx

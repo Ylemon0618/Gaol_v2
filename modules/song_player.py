@@ -2,6 +2,7 @@ import asyncio
 import shutil
 import time
 from functools import partial
+from copy import deepcopy
 
 import discord
 from async_timeout import timeout
@@ -122,6 +123,7 @@ class SongPlayer(commands.Cog):
                         if self.repeat_count == 0:
                             self.repeat = False
                             self.first = None
+                            self.queue_list = list(self.queue._queue)
 
                         source_new = await YTDLSource.create_source(self.ctx, url=source.url, loop=self.bot.loop,
                                                                     download=True, send_message=False)
@@ -174,3 +176,22 @@ async def cleanup(guild: discord.Guild, players):
             break
         except PermissionError:
             pass
+
+
+async def add_to_queue(player: SongPlayer, source: YTDLSource) -> None:
+    if player.repeat:
+        old_queue = deepcopy(player.queue)
+        new_queue = asyncio.Queue()
+
+        for _ in range(player.queue.qsize()):
+            cur = await old_queue.get()
+            await new_queue.put(cur)
+
+            if cur == player.queue_list[-1]:
+                await new_queue.put(source)
+                player.queue_list.append(source)
+
+        player.queue = new_queue
+    else:
+        await player.queue.put(source)
+        player.queue_list.append(source)
