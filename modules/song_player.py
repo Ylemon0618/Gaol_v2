@@ -2,7 +2,6 @@ import asyncio
 import shutil
 import time
 from functools import partial
-from copy import deepcopy
 
 import discord
 from async_timeout import timeout
@@ -56,7 +55,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             loop = loop or asyncio.get_event_loop()
 
             to_run = partial(ytdl.extract_info, url=url, download=download)
-            data = await loop.run_in_executor(None, to_run)
+            data = await loop.run_in_executor(None, to_run, None)
 
             if 'entries' in data:
                 data = data['entries'][0]
@@ -78,7 +77,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
 
         to_run = partial(ytdl.extract_info, url=data['webpage_url'], download=False)
-        data = await loop.run_in_executor(None, to_run)
+        data = await loop.run_in_executor(None, to_run, None)
 
         return cls(discord.FFmpegPCMAudio(data['url']), data=data)
 

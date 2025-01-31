@@ -1,6 +1,5 @@
 import discord
 
-from modules.make_embed import makeEmbed, Color
 from modules.song_player import YTDLSource, SongPlayer
 from modules.messages.embeds import SongEmbed
 
