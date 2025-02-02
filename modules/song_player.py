@@ -235,6 +235,6 @@ async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
         embed = set_queue_field(embed, player.queue_list, 0)
 
     for message in player.queue_message.values():
-        await message.edit_original_message(embed=embed,
-                                            view=None if player.queue.empty() else
-                                            QueueMainView(player.queue, player.queue_list, 0))
+        await message.message.edit(embed=embed,
+                                   view=None if player.queue.empty() else
+                                   QueueMainView(player.queue, player.queue_list, 0))
