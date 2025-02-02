@@ -1,6 +1,5 @@
 import asyncio
 import shutil
-import time
 from functools import partial
 
 import discord
@@ -181,13 +180,10 @@ async def cleanup(guild: discord.Guild, players):
     except KeyError:
         pass
 
-    s = time.time()
-    while time.time() - s < 0.1:
-        try:
-            shutil.rmtree(f'downloads/{guild.id}')
-            break
-        except PermissionError:
-            pass
+    try:
+        shutil.rmtree(f'downloads/{guild.id}')
+    except PermissionError:
+        pass
 
 
 async def add_to_queue(player: SongPlayer, source: YTDLSource) -> None:
