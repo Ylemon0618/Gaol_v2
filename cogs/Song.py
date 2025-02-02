@@ -120,6 +120,7 @@ class Song(commands.Cog):
         if ctx.user.voice is None:
             return await ctx.respond(embed=SongEmbed.Error.not_connected)
 
+        await ctx.defer()
         await ctx.trigger_typing()
 
         if not ctx.voice_client:
