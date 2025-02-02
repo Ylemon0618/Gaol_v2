@@ -120,7 +120,6 @@ class Song(commands.Cog):
         if ctx.user.voice is None:
             return await ctx.respond(embed=SongEmbed.Error.not_connected)
 
-        await ctx.defer()
         await ctx.trigger_typing()
 
         if not ctx.voice_client:
@@ -145,15 +144,15 @@ class Song(commands.Cog):
 
                 songs = pl.video_urls if len(pl.video_urls) <= 20 else pl.video_urls[:20]
                 if not pl.video_urls:
-                    songs = [song]
+                    source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
+                    return await add_to_queue(player, source)
 
                 for url in songs:
                     source = await YTDLSource.create_source(ctx, url=url, loop=self.bot.loop, download=True,
                                                             send_message=False)
-
                     await add_to_queue(player, source)
 
-                await downloading.edit(f"{len(songs)} of songs in the playlist successfully added to queue", embed=None)
+                await downloading.edit(f"{len(songs)} of songs in the [playlist](<{song}>) successfully added to queue", embed=None)
             else:
                 source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
 
