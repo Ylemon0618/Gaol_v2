@@ -137,15 +137,15 @@ class Song(commands.Cog):
             player = self.get_player(ctx)
 
             if "&list=" in song:
-                downloading = await ctx.respond(embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
-                                                                "플레이리스트를 다운로드 중입니다...", Color.success))
-
                 pl = Playlist(song)
 
                 songs = pl.video_urls if len(pl.video_urls) <= 20 else pl.video_urls[:20]
                 if not pl.video_urls:
                     source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
                     return await add_to_queue(player, source)
+
+                downloading = await ctx.respond(embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
+                                                                "플레이리스트를 다운로드 중입니다...", Color.success))
 
                 for url in songs:
                     source = await YTDLSource.create_source(ctx, url=url, loop=self.bot.loop, download=True,
