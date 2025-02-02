@@ -153,9 +153,10 @@ class SongPlayer(commands.Cog):
 
             try:
                 self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-                self.now_playing = await self._channel.send(embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                                                                            f"[**{source.title}**](<{source.url}>)",
-                                                                            Color.success))
+                self.now_playing = await self._channel.send(
+                    embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
+                                    f"[**{source.title}**](<{source.url}>)",
+                                    Color.success))
             except AttributeError:
                 pass
 
@@ -234,6 +235,6 @@ async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
         embed = set_queue_field(embed, player.queue_list, 0)
 
     for message in player.queue_message.values():
-        await message.edit(embed=embed,
-                           view=None if player.queue.empty() else
-                           QueueMainView(player.queue, player.queue_list, 0))
+        await message.edit_original_message(embed=embed,
+                                            view=None if player.queue.empty() else
+                                            QueueMainView(player.queue, player.queue_list, 0))
