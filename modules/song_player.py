@@ -69,7 +69,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
             return cls(discord.FFmpegPCMAudio(source), data=data)
         except Exception as e:
-            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error), ephemeral=True)
+            await ctx.respond(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error), ephemeral=True)
 
     @classmethod
     async def regather_stream(cls, data, *, loop):
@@ -169,7 +169,7 @@ class SongPlayer(commands.Cog):
                 pass
 
 
-async def cleanup(guild: discord.Guild, players):
+async def cleanup(guild: discord.Guild, players) -> None:
     try:
         await guild.voice_client.disconnect()
     except AttributeError:

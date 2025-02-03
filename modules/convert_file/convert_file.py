@@ -5,7 +5,7 @@ import requests
 from PIL import Image
 
 
-async def Convert(file: discord.Attachment, ext: str):
+async def Convert(file: discord.Attachment, ext: str) -> str:
     directory = "./images/"
     filename = file.filename
 
