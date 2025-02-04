@@ -107,6 +107,12 @@ class SongPlayer(commands.Cog):
 
         ctx.bot.loop.create_task(self.player_loop())
 
+    async def terminate(self):
+        for message in self.queue_message.values():
+            await message.delete()
+
+        return self.bot.loop.create_task(cleanup(self._guild, self.players))
+
     async def player_loop(self):
         await self.bot.wait_until_ready()
 
@@ -114,6 +120,12 @@ class SongPlayer(commands.Cog):
             self.next.clear()
 
             try:
+                if len(self.ctx.voice_client.channel.members) == 1:
+                    await self._channel.send(
+                        embed=makeEmbed(":mute: Leave :mute:", "음성 채팅방이 비어 재생을 중지하고 떠납니다.", Color.success))
+
+                    await self.terminate()
+
                 async with timeout(300):
                     source = await self.queue.get()
 
@@ -135,10 +147,9 @@ class SongPlayer(commands.Cog):
                     if self.queue_message:
                         await edit_queue_message(self, source)
             except asyncio.TimeoutError:
-                for message in self.queue_message.values():
-                    await message.delete()
-
-                return self.bot.loop.create_task(cleanup(self._guild, self.players))
+                await self.terminate()
+            except AttributeError:
+                pass
 
             if not isinstance(source, YTDLSource):
                 try:
