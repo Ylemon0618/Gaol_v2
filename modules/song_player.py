@@ -163,10 +163,70 @@ class SongPlayer(commands.Cog):
 
             try:
                 self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+
+                class NowPlaying(discord.ui.View):
+                    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+                        super().__init__(timeout=None)
+
+                        if ctx.voice_client.is_paused():
+                            self.add_item(ResumeButton(ctx, queue))
+                        else:
+                            self.add_item(PauseButton(ctx, queue))
+
+                        if queue.qsize() > 1:
+                            self.add_item(NextButton(ctx, queue))
+
+                class PauseButton(discord.ui.Button):
+                    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+                        super().__init__(
+                            emoji="⏸️",
+                            custom_id="pause",
+                            style=discord.ButtonStyle.blurple
+                        )
+
+                        self.ctx = ctx
+                        self.queue = queue
+
+                    async def callback(self, interaction: discord.Interaction):
+                        self.ctx.voice_client.pause()
+
+                        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue))
+
+                class ResumeButton(discord.ui.Button):
+                    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+                        super().__init__(
+                            emoji="⏹️",
+                            custom_id="resume",
+                            style=discord.ButtonStyle.blurple
+                        )
+
+                        self.ctx = ctx
+                        self.queue = queue
+
+                    async def callback(self, interaction: discord.Interaction):
+                        self.ctx.voice_client.resume()
+
+                        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue))
+
+                class NextButton(discord.ui.Button):
+                    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+                        super().__init__(
+                            emoji="⏭️",
+                            custom_id="next",
+                            style=discord.ButtonStyle.blurple
+                        )
+
+                        self.ctx = ctx
+                        self.queue = queue
+
+                    async def callback(self, interaction: discord.Interaction):
+                        await interaction.response.defer()
+                        self.ctx.voice_client.stop()
+
                 self.now_playing = await self._channel.send(
                     embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                                    f"[**{source.title}**](<{source.url}>)",
-                                    Color.success))
+                                    f"[**{source.title}**](<{source.url}>)", Color.success),
+                    view=NowPlaying(self.ctx, self.queue))
             except AttributeError:
                 pass
 
