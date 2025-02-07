@@ -64,9 +64,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
                 embed = makeEmbed(":cd: Play :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)", Color.success)
 
-                channel = f"[{data['uploader']}](<{data['uploader_url']}>)"
+                channel = data['uploader']
                 if data['channel_is_verified']:
                     channel += "<:verified:1337271571043192893>"
+                channel += f" ([{data['uploader_id']}](<{data['uploader_url']}>))"
 
                 embed.add_field(name="Channel", value=channel, inline=True)
                 embed.add_field(name="Duration", value=data['duration_string'], inline=True)
