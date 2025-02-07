@@ -63,7 +63,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 embed = makeEmbed(":cd: Added to queue :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)", Color.success)
 
                 channel = data['uploader']
-                if data['channel_is_verified']:
+                if 'channel_is_verified' in data:
                     channel += "<:verified:1337271571043192893>"
                 channel += f" ([{data['uploader_id']}](<{data['uploader_url']}>))"
 
