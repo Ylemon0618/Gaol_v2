@@ -60,7 +60,20 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 data = data['entries'][0]
 
             if send_message:
-                await ctx.respond(f"[**{data['title']}**](<{data['webpage_url']}>) successfully added to queue")
+                print(data)
+
+                embed = makeEmbed(":cd: Play :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)", Color.success)
+
+                channel = f"[{data['uploader']}](<{data['uploader_url']}>)"
+                if data['channel_is_verified']:
+                    channel += "<:verified:1337271571043192893>"
+
+                embed.add_field(name="Channel", value=channel, inline=True)
+                embed.add_field(name="Duration", value=data['duration_string'], inline=True)
+
+                embed.set_thumbnail(url=data['thumbnail'])
+
+                await ctx.respond(embed=embed)
 
             if download:
                 source = ytdl.prepare_filename(data)
