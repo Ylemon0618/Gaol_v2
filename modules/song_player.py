@@ -60,8 +60,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 data = data['entries'][0]
 
             if send_message:
-                print(data)
-
                 embed = makeEmbed(":cd: Added to queue :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)", Color.success)
 
                 channel = data['uploader']
