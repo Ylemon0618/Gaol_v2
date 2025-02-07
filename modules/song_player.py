@@ -62,7 +62,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             if send_message:
                 print(data)
 
-                embed = makeEmbed(":cd: Play :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)", Color.success)
+                embed = makeEmbed(":cd: Added to queue :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)", Color.success)
 
                 channel = data['uploader']
                 if data['channel_is_verified']:
