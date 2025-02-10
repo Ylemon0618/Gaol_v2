@@ -65,7 +65,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 channel = data['uploader']
                 if 'channel_is_verified' in data:
                     channel += "<:verified:1337271571043192893>"
-                channel += f" ([{data['uploader_id']}](<{data['uploader_url']}>))"
+                if data['uploader_id'] and data['uploader_url']:
+                    channel += f" ([{data['uploader_id']}](<{data['uploader_url']}>))"
 
                 embed.add_field(name="Channel", value=channel, inline=True)
                 embed.add_field(name="Duration", value=data['duration_string'], inline=True)
