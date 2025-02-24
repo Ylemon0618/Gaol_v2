@@ -6,6 +6,7 @@ import discord
 from async_timeout import timeout
 from discord import ApplicationContext
 from discord.ext import commands
+from matplotlib.image import thumbnail
 from yt_dlp import YoutubeDL
 
 from modules.make_embed import makeEmbed, Color
@@ -39,6 +40,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         self.title = data.get('title')
         self.url = data.get('webpage_url')
+        self.thumbnail = data.get('thumbnail')
+        self.duration = data.get('duration')
 
     def __getitem__(self, item: str):
         return self.__getattribute__(item)
@@ -73,12 +76,17 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
                 embed.set_thumbnail(url=data['thumbnail'])
 
+                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+
                 await ctx.respond(embed=embed)
 
             if download:
                 source = ytdl.prepare_filename(data)
             else:
-                return {'url': data['webpage_url'], 'title': data['title']}
+                return {'url': data['webpage_url'],
+                        'title': data['title'],
+                        'duration': data['duration'],
+                        'thumbnail': data['thumbnail']}
 
             return cls(discord.FFmpegPCMAudio(source), data=data)
         except Exception as e:

@@ -1,4 +1,5 @@
 import asyncio
+import time
 import os
 from dotenv import load_dotenv
 
@@ -148,12 +149,32 @@ class Song(commands.Cog):
                 downloading = await ctx.respond(embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
                                                                 "플레이리스트를 다운로드 중입니다...", Color.success))
 
+                thumbnail = None
+                duration = 0
                 for url in songs:
                     source = await YTDLSource.create_source(ctx, url=url, loop=self.bot.loop, download=True,
                                                             send_message=False)
                     await add_to_queue(player, source)
 
-                await downloading.edit(f"{len(songs)} of songs in the [playlist](<{song}>) successfully added to queue", embed=None)
+                    if not thumbnail:
+                        thumbnail = source.thumbnail
+                    duration += source.duration
+
+                embed = makeEmbed(":cd: Playlist added to queue :cd:", f"[**{pl.title}**](<{pl.playlist_url}>)", Color.success)
+
+                embed.add_field(name="Owner", value=f"[{pl.owner}](<{pl.owner_url}>)", inline=True)
+
+                if duration >= 3600:
+                    duration_string = time.strftime('%H:%M:%S', time.gmtime(duration))
+                else:
+                    duration_string = time.strftime('%M:%S', time.gmtime(duration))
+                embed.add_field(name="Duration", value=duration_string, inline=True)
+
+                embed.set_thumbnail(url=thumbnail)
+
+                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+
+                await downloading.edit(embed=embed)
             else:
                 source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
 
