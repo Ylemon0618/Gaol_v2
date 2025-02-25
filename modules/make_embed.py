@@ -4,15 +4,9 @@ import discord
 
 
 class Color:
-    # 성공(초록색)
-    success = 0x00FF00
-
-    # 실패(빨간색)
-    error = 0xFF0000
-
-    # 경고(노란색)
-    # 확인 창에 사용
-    warning = 0xFFFF00
+    success = 0x00C6FF
+    error = 0xD5C7FF
+    warning = 0xFFD9FF
 
 
 # 필드(임베드) 클래스
