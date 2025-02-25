@@ -59,19 +59,19 @@ class Utils(commands.Cog):
                 return 0
             elif choice1 == "rock":
                 if choice2 == "paper":
-                    return 1
-                else:
                     return 2
+                else:
+                    return 1
             elif choice1 == "paper":
                 if choice2 == "scissors":
-                    return 1
-                else:
                     return 2
+                else:
+                    return 1
             elif choice1 == "scissors":
                 if choice2 == "rock":
-                    return 1
-                else:
                     return 2
+                else:
+                    return 1
 
         class RPSView(discord.ui.View):
             def __init__(self):
