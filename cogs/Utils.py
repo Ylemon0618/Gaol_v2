@@ -227,7 +227,7 @@ class CommandListSelect(discord.ui.Select):
             options.append(discord.SelectOption(label=help_json[group][lang][idx]["name"], value=idx))
 
         super().__init__(
-            placeholder=f"{group} commands",
+            placeholder=group,
             options=options
         )
 
@@ -265,8 +265,8 @@ class Utils(commands.Cog):
                                           f"{round(self.bot.latency * 1000)}ms", Color.success))
 
     @file_commands.command(name="help", name_localizations={"ko": "도움"},
-                           description="Show the list of commands",
-                           description_localizations={"ko": "명령어 목록을 보여줍니다."})
+                           description="Do you need some help? Use this command to get help!",
+                           description_localizations={"ko": "도움이 필요하신가요? 이 명령어를 사용해 도움을 받으세요!"})
     async def help_(self, ctx: ApplicationContext):
         embed = makeEmbed(":speech_left: Help :speech_left:",
                           "도움이 필요하신가요?\n\n아래에서 항목을 선택 해 주세요.", Color.success)
