@@ -91,6 +91,105 @@
     }
   },
   "file": {
-    "ko": {}
+    "ko": {
+      "1": {
+        "name": "변환",
+        "args": [
+          "<이미지 파일>"
+        ],
+        "description": "WebP 파일을 이미지 파일로, 이미지 파일을 WebP 파일로 변환합니다."
+      },
+      "2": {
+        "name": "추출",
+        "args": [
+          "<영상>",
+          "<확장자 (wav/mp3)>"
+        ],
+        "description": "영상에서 오디오를 추출합니다.\n\n(개발중)"
+      }
+    },
+    "en": {
+      "1": {
+        "name": "convert",
+        "args": [
+          "<Image File>"
+        ],
+        "description": "Convert WebP to image, image to Webp."
+      },
+      "2": {
+        "name": "extract",
+        "args": [
+          "<Video File>",
+          "<Extension (wav/mp3)>"
+        ],
+        "description": "Extract audio from video file.\n\n(Under construction)"
+      }
+    }
+  },
+  "music": {
+    "ko": {
+      "1": {
+        "name": "코드",
+        "args": [
+          "<코드>",
+          "[악기 (피아노/기타)]"
+        ],
+        "description": "입력한 코드의 구성음을 출력합니다.\n\n(개발중)"
+      }
+    },
+    "en": {
+      "1": {
+        "name": "chord",
+        "args": [
+          "<Chord>",
+          "[Instrument (Piano/Guitar)]"
+        ],
+        "description": "Outputs the notes of the entered chord.\n\n(Under construction)"
+      }
+    }
+  },
+  "game": {
+    "ko": {
+      "1": {
+        "name": "가위바위보",
+        "args": [
+          "<가위/바위/보>",
+          "[유저]"
+        ],
+        "description": "가위바위보 게임을 플레이합니다.\n\n[유저] 항목을 비워 둘 시 봇과, 그렇지 않을 시 지정한 유저와 게임을 플레이합니다.\n지정된 유저는 DM을 통해 가위/바위/보를 선택할 수 있습니다."
+      }
+    },
+    "en": {
+      "1": {
+        "name": "rock-paper-scissors",
+        "args": [
+          "<Rock/Paper/Scissor>",
+          "[User]"
+        ],
+        "description": "Play the rock-paper-scissors game.\n\nIf you leave the [user] item blank, play the game with the bot, and if not, the game with the user you entered.\nDesignated users can select Rock/Scissors/Paper via DM."
+      }
+    }
+  },
+  "utils": {
+    "ko": {
+      "1": {
+        "name": "도움",
+        "description": "도움이 필요하신가요?\n이 명령어를 사용해 도움을 받으세요!\n\n이 명령어를 통해 명령어 목록 일람, 개발자에게 문의 등을 할 수 있습니다.\n(문의 현재 개발중)"
+      },
+      "2": {
+        "name": "핑",
+        "description": "봇의 응답 시간을 확인합니다."
+      }
+    },
+    "en": {
+      "1": {
+        "name": "help",
+        "description": "Do you need some help?\nUse this command to get help!\n\nYou can list commands, contact developers, and more, by this command.\n(Contacting developers now under construction)"
+      },
+      "2": {
+        "name": "ping",
+        "description": "Check the bot's response time."
+      }
+    }
   }
 }
