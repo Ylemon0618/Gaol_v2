@@ -62,5 +62,67 @@ class HelpEmbed:
                             ㅤ
                             """,  # 줄 구분용 공백문자
                             Color.success)
+        },
+        "file": {
+            "ko": makeEmbed(":file_folder: File | 파일 :file_folder:",
+                            """파일 관리를 위한 명령어입니다.
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success),
+            "en": makeEmbed(":file_folder: File | 파일 :file_folder:",
+                            """Commands for managing files.
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success)
+        },
+        "music": {
+            "ko": makeEmbed(":musical_keyboard: Music | 음악 :musical_keyboard:",
+                            """음악과 관련된 명령어입니다.
+                            
+                            *이 명령어는 노래를 재생하는 명령어가 아닙니다.
+                            음악 재생은* `/노래` *를 이용해 주세요.*
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success),
+            "en": makeEmbed(":musical_keyboard: Music | 음악 :musical_keyboard:",
+                            """Commands for music.
+                            
+                            *These commands do not play songs.
+                            To play music, please use* `/Song` *instead.*
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success)
+        },
+        "game": {
+            "ko": makeEmbed(":video_game: Game | 게임 :video_game:",
+                            """봇 또는 유저와 게임을 플레이 할 수 있는 명령어입니다.
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success),
+            "en": makeEmbed(":video_game: Game | 게임 :video_game:",
+                            """Commands for playing game with the bot or user.
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success)
+        },
+        "utils": {
+            "ko": makeEmbed(":grey_question: Utils | 유틸리티 :grey_question:",
+                            """각종 기능들을 사용할 수 있는 명령어입니다.
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success),
+            "en": makeEmbed(":grey_question: Utils | 유틸리티 :grey_question:",
+                            """Commands of utility.
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success)
         }
     }
