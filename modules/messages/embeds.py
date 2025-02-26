@@ -2,9 +2,6 @@ from modules.make_embed import makeEmbed, Color
 
 
 class SongEmbed:
-    def __init__(self):
-        pass
-
     class Error:
         error_title = ":warning: Error :warning:"
 
@@ -31,7 +28,8 @@ class SongEmbed:
         skip = makeEmbed(":musical_note: Skipped :musical_note:", "노래를 스킵했습니다.", Color.success)
         stop = makeEmbed(":musical_note: Stopped :musical_note:", "노래 재생을 중지했습니다.", Color.success)
         repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열을 반복합니다.", Color.success)
-        stop_repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열 반복을 중지했습니다.", Color.success)
+        stop_repeat = makeEmbed(":arrows_counterclockwise: Repeat :arrows_counterclockwise:", f"대기열 반복을 중지했습니다.",
+                                Color.success)
 
     class UI:
         convert = makeEmbed(":arrows_counterclockwise: Convert :arrows_counterclockwise:",
@@ -39,3 +37,30 @@ class SongEmbed:
                             Color.success)
 
         repeat_confirm = makeEmbed("Confirm", f"이미 대기열을 반복중입니다.", Color.warning)
+
+
+class HelpEmbed:
+    commands = {
+        "song": {
+            "ko": makeEmbed(":musical_note: Song | 노래 :musical_note:",
+                            """음악 재생과 관련된 명령어입니다.
+                            
+                            [yt-dlp](<https://github.com/yt-dlp/yt-dlp>) 라이브러리를 사용해 제작되었습니다.
+                            
+                            *이 명령어는 유튜브의 정책을 지키지 않을 수도 있습니다.*
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success),
+            "en": makeEmbed(":musical_note: Song | 노래 :musical_note:",
+                            """Commands for playing music.
+                            
+                            These commands are created using a library: [yt-dlp](<https://github.com/yt-dlp/yt-dlp>).
+                            
+                            *These commands may not comply with YouTube's policy.*
+                            ㅤ
+                            ㅤ
+                            """,  # 줄 구분용 공백문자
+                            Color.success)
+        }
+    }
