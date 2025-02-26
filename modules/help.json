@@ -1,0 +1,96 @@
+{
+  "song": {
+    "ko": {
+      "1": {
+        "name": "접속",
+        "description": "봇이 유저가 참여해 있는 음성 채팅방에 접속합니다.\n\n봇이 이미 다른 음성 채팅방에 참여해 있는 경우, `확인` 버튼을 누르면 봇이 이동합니다."
+      },
+      "2": {
+        "name": "퇴장",
+        "description": "봇이 음성 채팅방에서 퇴장합니다."
+      },
+      "3": {
+        "name": "재생",
+        "args": [
+          "<검색어/url>"
+        ],
+        "description": "봇이 현재 음성 채팅방에서 음악을 재생합니다.\n\n검색어나 url을 입력해 해당 음악을 검색하거나 재생할 수 있습니다.\n\n봇이 음악을 재생하는 도중에 다른 음악을 재생하면, 대기열에 추가됩니다.\n대기열은 `/노래 대기열` 명령어로 확인할 수 있습니다.\n\n봇이 이미 다른 음성 채팅방에 참여해 있는 경우, `확인` 버튼을 누르면 봇이 이동하며, 대기열을 초기화 할지 물어봅니다."
+      },
+      "4": {
+        "name": "대기열",
+        "description": "봇이 현재 재생 중인 음악과 대기열에 있는 음악을 보여줍니다.\n\n대기열의 음악이 10개 초과인 경우, 버튼을 통해 페이지를 넘길 수 있습니다.\n\n현재 페이지의 곡을 선택 해 삭제 할 수 있습니다."
+      },
+      "5": {
+        "name": "일시정지",
+        "description": "봇이 현재 재생 중인 음악을 일시정지합니다."
+      },
+      "6": {
+        "name": "재개",
+        "description": "봇이 일시정지한 음악을 다시 재생합니다."
+      },
+      "7": {
+        "name": "스킵",
+        "description": "봇이 현재 재생 중인 음악을 스킵합니다."
+      },
+      "8": {
+        "name": "중지",
+        "description": "봇이 재생중인 음악을 중지하고, 대기열을 초기화 한 후 음성 채팅방에서 퇴장합니다."
+      },
+      "9": {
+        "name": "볼륨",
+        "args": [
+          "<볼륨>"
+        ],
+        "description": "봇의 음악 출력 볼륨을 조절합니다.\n\n볼륨은 0 ~ 100 사이의 정수 값으로 설정할 수 있습니다."
+      }
+    },
+
+    "en": {
+      "1": {
+        "name": "join",
+        "description": "Join the voice chat in which the user is participating.\n\nIf the bot is already in another voice chat, click the `OK` button to move the bot."
+      },
+      "2": {
+        "name": "leave",
+        "description": "Leave the voice chat."
+      },
+      "3": {
+        "name": "play",
+        "args": [
+          "<search word/url>"
+        ],
+        "description": "Play music in the current voice chat room.\n\nYou can play the music by entering a search word or url.\n\nIf you play another song while the bot already playing music, it will be added to the queue.\nYou can check the queue by '/song queue' command.\n\nIf the bot is already in another voice chat, the bot moves if you press the 'OK' button and asks if you want to initialize the queue."
+      },
+      "4": {
+        "name": "queue",
+        "description": "Show the music that the bot is currently playing and the music that is in the queue.\n\nIf you have more than 10 music in the queue, you can turn the page through a button.\n\nYou can select and delete a song on the current page."
+      },
+      "5": {
+        "name": "pause",
+        "description": "Pause the music that is currently playing."
+      },
+      "6": {
+        "name": "resume",
+        "description": "Resume the music that has been paused"
+      },
+      "7": {
+        "name": "skip",
+        "description": "Skip the music that is currently playing."
+      },
+      "8": {
+        "name": "stop",
+        "description": "The bot stops playing music, initializes the queue and exits the voice chat."
+      },
+      "9": {
+        "name": "volume",
+        "args": [
+          "<volume>"
+        ],
+        "description": "Adjust the volume of the music output.\n\nThe volume can be set to an integer value between 0 and 100."
+      }
+    }
+  },
+  "file": {
+    "ko": {}
+  }
+}
