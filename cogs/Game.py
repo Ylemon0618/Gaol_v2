@@ -84,15 +84,15 @@ class Game(commands.Cog):
                                                         view=None)
 
                 if not check_winner(choice, choice2):
-                    result = makeEmbed(":no_entry: Draw :no_entry:",
+                    result = makeEmbed(":fist: :raised_hand: :v:",
                                        f"무승부!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
                                        Color.success)
                 elif check_winner(choice, choice2) == 1:
-                    result = makeEmbed(":white_check_mark: Win :white_check_mark:",
+                    result = makeEmbed(":fist: :raised_hand: :v:",
                                        f"{ctx.author.mention} 승리!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
                                        Color.success)
                 else:
-                    result = makeEmbed(":x: Lose :x:",
+                    result = makeEmbed(":fist: :raised_hand: :v:",
                                        f"{user.mention} 승리!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
                                        Color.success)
 
@@ -103,15 +103,15 @@ class Game(commands.Cog):
             bot_choice = random.choice(choice_list)
 
             if not check_winner(choice, bot_choice):
-                return await ctx.respond(embed=makeEmbed(":no_entry: Draw :no_entry:",
+                return await ctx.respond(embed=makeEmbed(":fist: :raised_hand: :v:",
                                                          f"무승부!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{ctx.bot.user.mention}: {emoji.get(bot_choice)}",
                                                          Color.success))
             elif check_winner(choice, bot_choice) == 1:
-                return await ctx.respond(embed=makeEmbed(":white_check_mark: Win :white_check_mark:",
+                return await ctx.respond(embed=makeEmbed(":fist: :raised_hand: :v:",
                                                          f"승리!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{ctx.bot.user.mention}: {emoji.get(bot_choice)}",
                                                          Color.success))
             else:
-                return await ctx.respond(embed=makeEmbed(":x: Lose :x:",
+                return await ctx.respond(embed=makeEmbed(":fist: :raised_hand: :v:",
                                                          f"패배!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{ctx.bot.user.mention}: {emoji.get(bot_choice)}",
                                                          Color.success))
         else:
