@@ -19,7 +19,7 @@ class File(commands.Cog):
         self.bot = bot
 
     file_commands = discord.SlashCommandGroup(name="file", name_localizations={"ko": "파일"},
-                                              description="Commands for managing your files",
+                                              description="Commands for managing files",
                                               description_localizations={"ko": "파일 관리와 관련된 명령어"},
                                               guild_ids=guild_ids)
 
