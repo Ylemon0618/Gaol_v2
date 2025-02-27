@@ -40,6 +40,20 @@ class SongEmbed:
 
 
 class HelpEmbed:
+    choose_item = makeEmbed(":speech_left: Help :speech_left:",
+                            """Do you need some help?
+                            Please select an item below.
+                            
+                            도움이 필요하신가요?
+                            아래에서 항목을 선택 해 주세요.""",
+                            Color.success)
+
+    choose_command = makeEmbed(":question: Command List | 명령어 도움말 :question:",
+                               """Please choose a group of commands you need help with.
+                               
+                               사용법이 궁금한 명령어를 아래에서 선택 해 주세요.""",
+                               Color.success)
+
     commands = {
         "song": {
             "ko": makeEmbed(":musical_note: Song | 노래 :musical_note:",

@@ -38,9 +38,7 @@ class HelpSelect(discord.ui.Select):
         choice = self.values[0]
 
         if choice == "command":
-            embed = makeEmbed(":question: Command List | 명령어 도움말 :question:",
-                              "사용법이 궁금한 명령어를 아래에서 선택 해 주세요.", Color.success)
-
+            embed = HelpEmbed.choose_command
             await interaction.response.edit_message(embed=embed, view=CommandView())
 
 
@@ -134,6 +132,7 @@ class CommandListView(discord.ui.View):
 
         self.add_item(CommandPrevButton(self.lang, self.page, self.group, self.prefix))
         self.add_item(CommandNextButton(self.lang, self.page, self.group, self.prefix))
+        self.add_item(CommandBackButton(self.lang))
         self.add_item(CommandLangButton(self.lang, self.page, self.group, self.prefix))
         self.add_item(CommandListSelect(self.lang, self.page, self.group, self.prefix))
 
@@ -143,7 +142,7 @@ class CommandNextButton(discord.ui.Button):
         super().__init__(
             label="Next",
             emoji="➡️",
-            custom_id="help song page_next",
+            custom_id="help cmd page_next",
             style=discord.ButtonStyle.blurple
         )
 
@@ -171,7 +170,7 @@ class CommandPrevButton(discord.ui.Button):
         super().__init__(
             label="Prev",
             emoji="⬅️",
-            custom_id="help song page_prev",
+            custom_id="help cmd page_prev",
             style=discord.ButtonStyle.blurple
         )
 
@@ -197,9 +196,9 @@ class CommandPrevButton(discord.ui.Button):
 class CommandLangButton(discord.ui.Button):
     def __init__(self, lang: str, page: int, group: str, prefix: str):
         super().__init__(
-            label="Change Language",
-            custom_id="help song lang",
-            style=discord.ButtonStyle.green
+            label="Change to English" if lang == "ko" else "한국어로 변경",
+            custom_id="help cmd lang",
+            style=discord.ButtonStyle.gray
         )
 
         self.lang = lang
@@ -218,6 +217,19 @@ class CommandLangButton(discord.ui.Button):
 
         await interaction.response.edit_message(embed=embed,
                                                 view=CommandListView(self.lang, self.page, self.group, self.prefix))
+
+
+class CommandBackButton(discord.ui.Button):
+    def __init__(self, lang: str):
+        super().__init__(
+            label="이전으로" if lang == "ko" else "Back",
+            custom_id="help cmd back",
+            style=discord.ButtonStyle.green
+        )
+
+    async def callback(self, interaction: Interaction):
+        embed = HelpEmbed.choose_command
+        await interaction.response.edit_message(embed=embed, view=CommandView())
 
 
 class CommandListSelect(discord.ui.Select):
@@ -268,9 +280,7 @@ class Utils(commands.Cog):
                            description="Do you need some help? Use this command to get help!",
                            description_localizations={"ko": "도움이 필요하신가요? 이 명령어를 사용해 도움을 받으세요!"})
     async def help_(self, ctx: ApplicationContext):
-        embed = makeEmbed(":speech_left: Help :speech_left:",
-                          "도움이 필요하신가요?\n\n아래에서 항목을 선택 해 주세요.", Color.success)
-
+        embed = HelpEmbed.choose_item
         await ctx.respond(embed=embed, view=HelpView(), ephemeral=True)
 
 
