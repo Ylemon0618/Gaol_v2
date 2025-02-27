@@ -16,14 +16,14 @@ guild_ids = list(map(int, os.environ.get('GUILDS').split()))
 
 
 class HelpView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, bot: discord.Bot):
         super().__init__(timeout=None)
 
-        self.add_item(HelpSelect())
+        self.add_item(HelpSelect(bot))
 
 
 class HelpSelect(discord.ui.Select):
-    def __init__(self):
+    def __init__(self, bot: discord.Bot):
         super().__init__(
             placeholder="What type of help do you need?",
             options=[
@@ -34,12 +34,16 @@ class HelpSelect(discord.ui.Select):
             ]
         )
 
+        self.bot = bot
+
     async def callback(self, interaction: discord.Interaction):
         choice = self.values[0]
 
         if choice == "command":
             embed = HelpEmbed.choose_command
             await interaction.response.edit_message(embed=embed, view=CommandView())
+        elif choice == "inquiry":
+            await interaction.response.send_modal(modal=InquiryModal(self.bot))
 
 
 with open("./modules/help.json", "r", encoding="UTF8") as file:
@@ -260,6 +264,28 @@ class CommandListSelect(discord.ui.Select):
                                                 view=CommandListView(self.lang, self.page, self.group, self.prefix))
 
 
+class InquiryModal(discord.ui.Modal):
+    def __init__(self, bot: discord.Bot):
+        super().__init__(title="Inquiry | 문의")
+
+        self.bot = bot
+
+        self.add_item(discord.ui.InputText(label="Please enter your inquiry. 문의 사항을 입력 해 주세요.",
+                                           placeholder="Your inquiry here",
+                                           style=discord.InputTextStyle.long, custom_id="inquiry"))
+
+    async def callback(self, interaction: Interaction):
+        await interaction.response.defer()
+
+        value = self.children[0].value
+
+        for owner_id in os.environ.get('OWNERS').split():
+            owner = self.bot.get_user(int(owner_id))
+
+            dm = await owner.create_dm()
+            await dm.send(embed=makeEmbed(f"{interaction.user.id} (@{interaction.user.name})", value, Color.success))
+
+
 class Utils(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -281,7 +307,7 @@ class Utils(commands.Cog):
                            description_localizations={"ko": "도움이 필요하신가요? 이 명령어를 사용해 도움을 받으세요!"})
     async def help_(self, ctx: ApplicationContext):
         embed = HelpEmbed.choose_item
-        await ctx.respond(embed=embed, view=HelpView(), ephemeral=True)
+        await ctx.respond(embed=embed, view=HelpView(ctx.bot), ephemeral=True)
 
 
 def setup(bot):
