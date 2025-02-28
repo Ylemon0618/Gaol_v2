@@ -116,7 +116,8 @@ class Game(commands.Cog):
                                                          Color.success))
         else:
             if user == ctx.author:
-                return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "잘못된 선택입니다.", Color.error), ephemeral=True)
+                return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", "잘못된 선택입니다.", Color.error),
+                                         ephemeral=True)
 
             embed = makeEmbed(":fist: :raised_hand: :v:", f"{user.mention}님의 답을 기다리고 있습니다...", Color.warning)
             await ctx.respond(embed=embed)
