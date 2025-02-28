@@ -243,7 +243,7 @@ class CommandListSelect(discord.ui.Select):
             options.append(discord.SelectOption(label=help_json[group][lang][idx]["name"], value=idx))
 
         super().__init__(
-            placeholder=group,
+            placeholder="Commands",
             options=options
         )
 
