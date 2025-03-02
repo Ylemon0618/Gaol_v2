@@ -6,7 +6,6 @@ import discord
 from async_timeout import timeout
 from discord import ApplicationContext
 from discord.ext import commands
-from matplotlib.image import thumbnail
 from yt_dlp import YoutubeDL
 
 from modules.make_embed import makeEmbed, Color
@@ -264,7 +263,7 @@ class SongPlayer(commands.Cog):
                 if source.uploader_id and source.uploader_url:
                     channel += f" ([{source.uploader_id}](<{source.uploader_url}>))"
 
-                embed.add_field(name="Channel", value=source.channel, inline=True)
+                embed.add_field(name="Channel", value=channel, inline=True)
                 embed.add_field(name="Duration", value=source.duration_string, inline=True)
 
                 embed.set_thumbnail(url=source.thumbnail)
