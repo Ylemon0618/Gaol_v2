@@ -112,6 +112,90 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(data['url']), data=data)
 
 
+class NowPlaying(discord.ui.View):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+        super().__init__(timeout=None)
+
+        if ctx.voice_client.is_paused():
+            self.add_item(ResumeButton(ctx, queue))
+        else:
+            self.add_item(PauseButton(ctx, queue))
+
+        if queue.qsize() >= 1:
+            self.add_item(NextButton(ctx, queue))
+
+
+class PauseButton(discord.ui.Button):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+        super().__init__(
+            emoji="⏸️",
+            custom_id="pause",
+            style=discord.ButtonStyle.blurple
+        )
+
+        self.ctx = ctx
+        self.queue = queue
+
+    async def callback(self, interaction: discord.Interaction):
+        self.ctx.voice_client.pause()
+
+        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue))
+
+
+class ResumeButton(discord.ui.Button):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+        super().__init__(
+            emoji="⏹️",
+            custom_id="resume",
+            style=discord.ButtonStyle.blurple
+        )
+
+        self.ctx = ctx
+        self.queue = queue
+
+    async def callback(self, interaction: discord.Interaction):
+        self.ctx.voice_client.resume()
+
+        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue))
+
+
+class NextButton(discord.ui.Button):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+        super().__init__(
+            emoji="⏭️",
+            custom_id="next",
+            style=discord.ButtonStyle.blurple
+        )
+
+        self.ctx = ctx
+        self.queue = queue
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        self.ctx.voice_client.stop()
+
+
+def now_playing_embed(source: YTDLSource, queue: asyncio.Queue) -> discord.Embed:
+    embed = makeEmbed(":musical_note: **Now Playing** :musical_note:",
+                      f"[**{source.title}**](<{source.url}>)", Color.success)
+
+    channel = source.channel
+    if source.channel_is_verified:
+        channel += "<:verified:1337271571043192893>"
+    if source.uploader_id and source.uploader_url:
+        channel += f" ([{source.uploader_id}](<{source.uploader_url}>))"
+
+    embed.add_field(name="Channel", value=channel, inline=True)
+    embed.add_field(name="Duration", value=source.duration_string, inline=True)
+
+    if queue.qsize() >= 1:
+        embed.add_field(name="Next Song", value=f"[**{queue._queue[0].title}**](<{queue._queue[0].url}>)", inline=False)
+
+    embed.set_thumbnail(url=source.thumbnail)
+
+    return embed
+
+
 class SongPlayer(commands.Cog):
     def __init__(self, ctx: ApplicationContext, players):
         self.ctx = ctx
@@ -195,80 +279,8 @@ class SongPlayer(commands.Cog):
             try:
                 self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-                class NowPlaying(discord.ui.View):
-                    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
-                        super().__init__(timeout=None)
-
-                        if ctx.voice_client.is_paused():
-                            self.add_item(ResumeButton(ctx, queue))
-                        else:
-                            self.add_item(PauseButton(ctx, queue))
-
-                        if queue.qsize() > 1:
-                            self.add_item(NextButton(ctx, queue))
-
-                class PauseButton(discord.ui.Button):
-                    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
-                        super().__init__(
-                            emoji="⏸️",
-                            custom_id="pause",
-                            style=discord.ButtonStyle.blurple
-                        )
-
-                        self.ctx = ctx
-                        self.queue = queue
-
-                    async def callback(self, interaction: discord.Interaction):
-                        self.ctx.voice_client.pause()
-
-                        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue))
-
-                class ResumeButton(discord.ui.Button):
-                    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
-                        super().__init__(
-                            emoji="⏹️",
-                            custom_id="resume",
-                            style=discord.ButtonStyle.blurple
-                        )
-
-                        self.ctx = ctx
-                        self.queue = queue
-
-                    async def callback(self, interaction: discord.Interaction):
-                        self.ctx.voice_client.resume()
-
-                        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue))
-
-                class NextButton(discord.ui.Button):
-                    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
-                        super().__init__(
-                            emoji="⏭️",
-                            custom_id="next",
-                            style=discord.ButtonStyle.blurple
-                        )
-
-                        self.ctx = ctx
-                        self.queue = queue
-
-                    async def callback(self, interaction: discord.Interaction):
-                        await interaction.response.defer()
-                        self.ctx.voice_client.stop()
-
-                embed = makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                                  f"[**{source.title}**](<{source.url}>)", Color.success)
-
-                channel = source.channel
-                if source.channel_is_verified:
-                    channel += "<:verified:1337271571043192893>"
-                if source.uploader_id and source.uploader_url:
-                    channel += f" ([{source.uploader_id}](<{source.uploader_url}>))"
-
-                embed.add_field(name="Channel", value=channel, inline=True)
-                embed.add_field(name="Duration", value=source.duration_string, inline=True)
-
-                embed.set_thumbnail(url=source.thumbnail)
-
-                self.now_playing = await self._channel.send(embed=embed,view=NowPlaying(self.ctx, self.queue))
+                self.now_playing = await self._channel.send(embed=now_playing_embed(source, self.queue),
+                                                            view=NowPlaying(self.ctx, self.queue))
             except AttributeError:
                 pass
 
@@ -327,6 +339,10 @@ async def add_to_queue(player: SongPlayer, source: YTDLSource) -> None:
 
     if player.queue_message:
         await edit_queue_message(player, player.current)
+
+    if player.now_playing:
+        await player.now_playing.edit(embed=now_playing_embed(player.current, player.queue),
+                                      view=NowPlaying(player.ctx, player.queue))
 
 
 async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
