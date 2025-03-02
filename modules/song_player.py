@@ -38,10 +38,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data):
         super().__init__(source)
 
-        self.title = data.get('title')
         self.url = data.get('webpage_url')
-        self.thumbnail = data.get('thumbnail')
+        self.title = data.get('title')
         self.duration = data.get('duration')
+        self.duration_string = data.get('duration_string')
+        self.thumbnail = data.get('thumbnail')
+        self.channel = data.get('uploader')
+        self.channel_is_verified = data.get('channel_is_verified')
+        self.uploader_id = data.get('uploader_id')
+        self.uploader_url = data.get('uploader_url')
 
     def __getitem__(self, item: str):
         return self.__getattribute__(item)
@@ -63,7 +68,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 data = data['entries'][0]
 
             if send_message:
-                embed = makeEmbed(":cd: Added to queue :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)", Color.success)
+                embed = makeEmbed(":cd: Added to queue :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)",
+                                  Color.success)
 
                 channel = data['uploader']
                 if 'channel_is_verified' in data:
@@ -86,7 +92,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 return {'url': data['webpage_url'],
                         'title': data['title'],
                         'duration': data['duration'],
-                        'thumbnail': data['thumbnail']}
+                        'duration_string': data['duration_string'],
+                        'thumbnail': data['thumbnail'],
+                        'channel': data['uploader'],
+                        'channel_is_verified': data['channel_is_verified'],
+                        'uploader_id': data['uploader_id'],
+                        'uploader_url': data['uploader_url']}
 
             return cls(discord.FFmpegPCMAudio(source), data=data)
         except Exception as e:
@@ -244,10 +255,21 @@ class SongPlayer(commands.Cog):
                         await interaction.response.defer()
                         self.ctx.voice_client.stop()
 
-                self.now_playing = await self._channel.send(
-                    embed=makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                                    f"[**{source.title}**](<{source.url}>)", Color.success),
-                    view=NowPlaying(self.ctx, self.queue))
+                embed = makeEmbed(":musical_note: **Now Playing** :musical_note:",
+                                  f"[**{source.title}**](<{source.url}>)", Color.success)
+
+                channel = source.channel
+                if source.channel_is_verified:
+                    channel += "<:verified:1337271571043192893>"
+                if source.uploader_id and source.uploader_url:
+                    channel += f" ([{source.uploader_id}](<{source.uploader_url}>))"
+
+                embed.add_field(name="Channel", value=source.channel, inline=True)
+                embed.add_field(name="Duration", value=source.duration_string, inline=True)
+
+                embed.set_thumbnail(url=source.thumbnail)
+
+                self.now_playing = await self._channel.send(embed=embed,view=NowPlaying(self.ctx, self.queue))
             except AttributeError:
                 pass
 
