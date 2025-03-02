@@ -30,7 +30,9 @@ class HelpSelect(discord.ui.Select):
                 discord.SelectOption(label="Command List | 명령어 도움말", value="command", emoji="❓",
                                      description="Display the command list"),
                 discord.SelectOption(label="Inquiry | 문의", value="inquiry", emoji="🙋",
-                                     description="Open an inquiry channel")
+                                     description="Open an inquiry channel"),
+                discord.SelectOption(label="Term of Service | 이용 약관", value="tos", emoji="📜",
+                                     description="Display the term of service")
             ]
         )
 
@@ -40,10 +42,14 @@ class HelpSelect(discord.ui.Select):
         choice = self.values[0]
 
         if choice == "command":
-            embed = HelpEmbed.choose_command
-            await interaction.response.edit_message(embed=embed, view=CommandView())
+            await interaction.response.edit_message(embed=HelpEmbed.choose_command, view=CommandView())
         elif choice == "inquiry":
             await interaction.response.send_modal(modal=InquiryModal(self.bot))
+        elif choice == "tos":
+            await interaction.response.edit_message(
+                embed=makeEmbed("📜 Term of Service | 이용 약관 📜",
+                                "Please check the term of service in the link below.\n\n아래 링크에서 이용 약관을 확인해 주세요.\n\nhttps://demo-link.com",
+                                Color.success))
 
 
 with open("./modules/help.json", "r", encoding="UTF8") as file:
@@ -284,6 +290,13 @@ class InquiryModal(discord.ui.Modal):
 
             dm = await owner.create_dm()
             await dm.send(embed=makeEmbed(f"{interaction.user.id} (@{interaction.user.name})", value, Color.success))
+
+        await interaction.followup.edit_message(
+            message_id=interaction.message.id,
+            embed=makeEmbed("🙋 Inquiry | 문의 🙋",
+                            "Your inquiry has been sent. Thank you!\n\n문의가 전송되었습니다. 감사합니다!",
+                            Color.success),
+            view=None)
 
 
 class Utils(commands.Cog):
