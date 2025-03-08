@@ -3,7 +3,7 @@ import json
 from copy import deepcopy
 
 import discord
-from discord import Option, OptionChoice, ApplicationContext, Interaction
+from discord import ApplicationContext, Interaction
 from discord.ext import commands
 from dotenv import load_dotenv
 
