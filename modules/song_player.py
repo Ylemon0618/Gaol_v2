@@ -113,7 +113,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 class NowPlaying(discord.ui.View):
-    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player):
         super().__init__(timeout=None)
 
         if ctx.voice_client.is_paused():
@@ -123,6 +123,8 @@ class NowPlaying(discord.ui.View):
 
         if queue.qsize() >= 1:
             self.add_item(NextButton(ctx, queue))
+
+        self.add_item(StopButton(ctx, queue, player))
 
 
 class PauseButton(discord.ui.Button):
@@ -145,7 +147,7 @@ class PauseButton(discord.ui.Button):
 class ResumeButton(discord.ui.Button):
     def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
         super().__init__(
-            emoji="⏹️",
+            emoji="▶️",
             custom_id="resume",
             style=discord.ButtonStyle.blurple
         )
@@ -173,6 +175,23 @@ class NextButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         self.ctx.voice_client.stop()
+
+
+class StopButton(discord.ui.Button):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player):
+        super().__init__(
+            emoji="⏹️",
+            custom_id="stop",
+            style=discord.ButtonStyle.red
+        )
+
+        self.ctx = ctx
+        self.queue = queue
+        self.player = player
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        await cleanup(self.ctx.guild, self.player)
 
 
 def now_playing_embed(source: YTDLSource, queue: asyncio.Queue) -> discord.Embed:
@@ -280,7 +299,7 @@ class SongPlayer(commands.Cog):
                 self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
                 self.now_playing = await self._channel.send(embed=now_playing_embed(source, self.queue),
-                                                            view=NowPlaying(self.ctx, self.queue))
+                                                            view=NowPlaying(self.ctx, self.queue, self.players))
             except AttributeError:
                 pass
 
@@ -342,7 +361,7 @@ async def add_to_queue(player: SongPlayer, source: YTDLSource) -> None:
 
     if player.now_playing:
         await player.now_playing.edit(embed=now_playing_embed(player.current, player.queue),
-                                      view=NowPlaying(player.ctx, player.queue))
+                                      view=NowPlaying(player.ctx, player.queue, player))
 
 
 async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
