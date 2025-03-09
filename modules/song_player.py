@@ -117,18 +117,18 @@ class NowPlaying(discord.ui.View):
         super().__init__(timeout=None)
 
         if ctx.voice_client.is_paused():
-            self.add_item(ResumeButton(ctx, queue))
+            self.add_item(ResumeButton(ctx, queue, player))
         else:
-            self.add_item(PauseButton(ctx, queue))
+            self.add_item(PauseButton(ctx, queue, player))
 
         if queue.qsize() >= 1:
-            self.add_item(NextButton(ctx, queue))
+            self.add_item(NextButton(ctx))
 
         self.add_item(StopButton(ctx, queue, player))
 
 
 class PauseButton(discord.ui.Button):
-    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player):
         super().__init__(
             emoji="⏸️",
             custom_id="pause",
@@ -137,15 +137,16 @@ class PauseButton(discord.ui.Button):
 
         self.ctx = ctx
         self.queue = queue
+        self.player = player
 
     async def callback(self, interaction: discord.Interaction):
         self.ctx.voice_client.pause()
 
-        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue))
+        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue, self.player))
 
 
 class ResumeButton(discord.ui.Button):
-    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player):
         super().__init__(
             emoji="▶️",
             custom_id="resume",
@@ -154,15 +155,16 @@ class ResumeButton(discord.ui.Button):
 
         self.ctx = ctx
         self.queue = queue
+        self.player = player
 
     async def callback(self, interaction: discord.Interaction):
         self.ctx.voice_client.resume()
 
-        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue))
+        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue, self.player))
 
 
 class NextButton(discord.ui.Button):
-    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue):
+    def __init__(self, ctx: ApplicationContext):
         super().__init__(
             emoji="⏭️",
             custom_id="next",
@@ -170,7 +172,6 @@ class NextButton(discord.ui.Button):
         )
 
         self.ctx = ctx
-        self.queue = queue
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
