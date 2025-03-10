@@ -34,7 +34,7 @@ ytdl = YoutubeDL(ytdl_format_options)
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data):
+    def __init__(self, source, requester: discord.Member, *, data):
         super().__init__(source)
 
         self.url = data.get('webpage_url')
@@ -46,6 +46,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.channel_is_verified = data.get('channel_is_verified')
         self.uploader_id = data.get('uploader_id')
         self.uploader_url = data.get('uploader_url')
+
+        self.requester = requester
 
     def __getitem__(self, item: str):
         return self.__getattribute__(item)
@@ -98,18 +100,18 @@ class YTDLSource(discord.PCMVolumeTransformer):
                         'uploader_id': data['uploader_id'],
                         'uploader_url': data['uploader_url']}
 
-            return cls(discord.FFmpegPCMAudio(source), data=data)
+            return cls(discord.FFmpegPCMAudio(source), data=data, requester=ctx.author)
         except Exception as e:
             await ctx.respond(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error), ephemeral=True)
 
     @classmethod
-    async def regather_stream(cls, data, *, loop):
+    async def regather_stream(cls, data, requester: discord.Member, *, loop):
         loop = loop or asyncio.get_event_loop()
 
         to_run = partial(ytdl.extract_info, url=data['webpage_url'], download=False)
         data = await loop.run_in_executor(None, to_run)
 
-        return cls(discord.FFmpegPCMAudio(data['url']), data=data)
+        return cls(discord.FFmpegPCMAudio(data['url']), data=data, requester=requester)
 
 
 class NowPlaying(discord.ui.View):
@@ -212,6 +214,8 @@ def now_playing_embed(source: YTDLSource, queue: asyncio.Queue) -> discord.Embed
         embed.add_field(name="Next Song", value=f"[**{queue._queue[0].title}**](<{queue._queue[0].url}>)", inline=False)
 
     embed.set_thumbnail(url=source.thumbnail)
+
+    embed.set_footer(text=source.requester.display_name, icon_url=source.requester.display_avatar.url)
 
     return embed
 
