@@ -13,7 +13,7 @@ intents = discord.Intents.all()
 
 class Bot(commands.Bot, ABC):
     def __init__(self):
-        super().__init__(intents=intents, command_prefix="!admin ")
+        super().__init__(intents=intents)
 
         self.remove_command("help")
 
