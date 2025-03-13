@@ -289,7 +289,7 @@ class InquiryModal(discord.ui.Modal):
             owner = self.bot.get_user(int(owner_id))
 
             dm = await owner.create_dm()
-            await dm.send(embed=makeEmbed(f"{interaction.user.id} (@{interaction.user.name})", value, Color.success))
+            await dm.send(embed=makeEmbed(f"{interaction.user.id} ({interaction.user.mention})", value, Color.success))
 
         await interaction.followup.edit_message(
             message_id=interaction.message.id,
