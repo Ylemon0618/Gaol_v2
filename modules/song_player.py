@@ -263,6 +263,8 @@ class SongPlayer(commands.Cog):
                     await self._channel.send(
                         embed=makeEmbed(":mute: Leave :mute:", "음성 채팅방이 비어 재생을 중지하고 떠납니다.", Color.success))
 
+                    await cleanup(self._guild, self.players)
+
                     await self.terminate()
 
                 async with timeout(300):
