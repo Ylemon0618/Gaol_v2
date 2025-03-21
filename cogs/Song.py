@@ -13,6 +13,7 @@ from modules.song_player import YTDLSource, SongPlayer, cleanup, add_to_queue, e
 from modules.song_change import MoveChannelView, ResetQueueView, ChangeRepeatView
 from modules.song_queue import QueueMainView, set_queue_field
 from modules.messages import SongEmbed
+from modules.song_custom_playlist import SongCustomPlaylistView
 
 load_dotenv()
 
@@ -138,7 +139,7 @@ class Song(commands.Cog):
         else:
             player = self.get_player(ctx)
 
-            if "&list=" in song:
+            if "list=" in song:
                 pl = Playlist(song)
 
                 songs = pl.video_urls if len(pl.video_urls) <= 20 else pl.video_urls[:20]
@@ -355,6 +356,16 @@ class Song(commands.Cog):
         player.queue_list = list(player.queue._queue)
 
         await ctx.respond(embed=SongEmbed.Success.stop_repeat)
+
+    # 커스텀 플레이리스트
+    # Param: ctx
+    @song_commands.command(name="playlist", name_localizations={"ko": "플레이리스트"},
+                           description="Manage custom playlist",
+                           description_localizations={"ko": "커스텀 플레이리스트를 관리합니다."})
+    async def playlist_(self, ctx: ApplicationContext):
+        await ctx.respond(embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
+                                          "Manage custom playlist.\n커스텀 플레이리스트를 관리합니다.", Color.success),
+                          view=SongCustomPlaylistView(ctx.author.id))
 
 
 def setup(bot):
