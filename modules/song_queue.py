@@ -61,7 +61,7 @@ class QueueMainSelect(discord.ui.Select):
 
     async def callback(self, interaction: Interaction):
         choice_num = int(self.values[0])
-        choice = self.options[choice_num]
+        choice = self.queue_listed[choice_num]
 
         embed = makeEmbed(Title.selected, f"**{choice}**", Color.success)
         await interaction.response.edit_message(embed=embed,
