@@ -144,7 +144,7 @@ class Song(commands.Cog):
 
                 songs = pl.video_urls if len(pl.video_urls) <= 20 else pl.video_urls[:20]
                 if not pl.video_urls:
-                    source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
+                    source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop, download=True)
                     return await add_to_queue(player, source)
 
                 downloading = await ctx.respond(embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
@@ -153,7 +153,7 @@ class Song(commands.Cog):
                 thumbnail = None
                 duration = 0
                 for url in songs:
-                    source = await YTDLSource.create_source(ctx, url=url, loop=self.bot.loop, download=True,
+                    source = await YTDLSource.create_source(ctx, url=url, requester=ctx.author, loop=self.bot.loop, download=True,
                                                             send_message=False)
                     await add_to_queue(player, source)
 
@@ -177,7 +177,7 @@ class Song(commands.Cog):
 
                 await downloading.edit(embed=embed)
             else:
-                source = await YTDLSource.create_source(ctx, url=song, loop=self.bot.loop, download=True)
+                source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop, download=True)
 
                 await add_to_queue(player, source)
 
@@ -327,8 +327,8 @@ class Song(commands.Cog):
         player.first = player.current
         player.queue_list = [player.first] + list(player.queue._queue)
 
-        source = await YTDLSource.create_source(ctx, url=player.current.url, loop=self.bot.loop, download=True,
-                                                send_message=False)
+        source = await YTDLSource.create_source(ctx, url=player.current.url, requester=player.current.requester,
+                                                loop=self.bot.loop, download=True, send_message=False)
         await player.queue.put(source)
 
         if player.queue_message:
