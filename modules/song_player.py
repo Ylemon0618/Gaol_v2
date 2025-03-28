@@ -53,7 +53,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return self.__getattribute__(item)
 
     @classmethod
-    async def create_source(cls, ctx: ApplicationContext, url, *, loop, download=False, send_message=True):
+    async def create_source(cls, ctx: ApplicationContext, url, *, loop, requester: discord.Member, download=False, send_message=True):
         try:
             global ytdl
 
@@ -100,7 +100,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                         'uploader_id': data['uploader_id'],
                         'uploader_url': data['uploader_url']}
 
-            return cls(discord.FFmpegPCMAudio(source), data=data, requester=ctx.author)
+            return cls(discord.FFmpegPCMAudio(source), data=data, requester=requester)
         except Exception as e:
             await ctx.respond(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error), ephemeral=True)
 
@@ -280,7 +280,7 @@ class SongPlayer(commands.Cog):
                             self.queue_list = list(self.queue._queue)
 
                         source_new = await YTDLSource.create_source(self.ctx, url=source.url, loop=self.bot.loop,
-                                                                    download=True, send_message=False)
+                                                                    requester=source.requester, download=True, send_message=False)
                         await self.queue.put(source_new)
                     else:
                         self.queue_list.pop(0)
@@ -294,7 +294,7 @@ class SongPlayer(commands.Cog):
 
             if not isinstance(source, YTDLSource):
                 try:
-                    source = await YTDLSource.regather_stream(source, loop=self.bot.loop)
+                    source = await YTDLSource.regather_stream(source, requster=source.requester, loop=self.bot.loop)
                 except Exception as e:
                     await self._channel.send(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error))
                     continue
