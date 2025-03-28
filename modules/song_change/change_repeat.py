@@ -46,8 +46,8 @@ class ChangeRepeatView(discord.ui.View):
         self.player.queue_list = queue_list
 
         for song in queue_list + [queue_list[0]]:
-            source = await YTDLSource.create_source(self.ctx, url=song.url, loop=self.bot.loop, download=True,
-                                                    send_message=False)
+            source = await YTDLSource.create_source(self.ctx, url=song.url, loop=self.bot.loop, requester=song.requester,
+                                                    download=True, send_message=False)
             await self.player.queue.put(source)
 
     @discord.ui.button(
