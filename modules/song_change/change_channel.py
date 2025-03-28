@@ -59,7 +59,7 @@ class ResetQueueView(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=None)
 
         player = self.players[self.guild.id]
-        source = await YTDLSource.create_source(self.ctx, url=self.song, loop=self.bot.loop, download=True)
+        source = await YTDLSource.create_source(self.ctx, url=self.song, requester=self.ctx.author, loop=self.bot.loop, download=True)
 
         await add_to_queue(player, source)
 
@@ -81,7 +81,7 @@ class ResetQueueView(discord.ui.View):
         player = SongPlayer(self.ctx, self.players)
         self.players[self.ctx.guild.id] = player
 
-        source = await YTDLSource.create_source(self.ctx, url=self.song, loop=self.bot.loop, download=True)
+        source = await YTDLSource.create_source(self.ctx, url=self.song, requester=self.ctx.author, loop=self.bot.loop, download=True)
 
         await player.queue.put(source)
         player.queue_list.append(source)
