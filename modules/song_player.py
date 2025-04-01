@@ -264,7 +264,6 @@ class SongPlayer(commands.Cog):
                         embed=makeEmbed(":mute: Leave :mute:", "음성 채팅방이 비어 재생을 중지하고 떠납니다.", Color.success))
 
                     await cleanup(self._guild, self.players)
-
                     await self.terminate()
 
                 async with timeout(300):
@@ -294,10 +293,12 @@ class SongPlayer(commands.Cog):
 
             if not isinstance(source, YTDLSource):
                 try:
-                    source = await YTDLSource.regather_stream(source, requster=source.requester, loop=self.bot.loop)
+                    source = await YTDLSource.regather_stream(source, loop=self.bot.loop, requester=source.requester)
                 except Exception as e:
                     await self._channel.send(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error))
-                    continue
+
+                    await cleanup(self._guild, self.players)
+                    await self.terminate()
 
             source.volume = self.volume
             self.current = source
