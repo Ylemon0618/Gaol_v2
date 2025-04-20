@@ -53,7 +53,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return self.__getattribute__(item)
 
     @classmethod
-    async def create_source(cls, ctx: ApplicationContext, url, *, loop, requester: discord.Member, download=False, send_message=True):
+    async def create_source(cls, ctx: ApplicationContext, url, *, loop, requester: discord.Member, download=False,
+                            send_message=True):
         try:
             global ytdl
 
@@ -279,7 +280,8 @@ class SongPlayer(commands.Cog):
                             self.queue_list = list(self.queue._queue)
 
                         source_new = await YTDLSource.create_source(self.ctx, url=source.url, loop=self.bot.loop,
-                                                                    requester=source.requester, download=True, send_message=False)
+                                                                    requester=source.requester, download=True,
+                                                                    send_message=False)
                         await self.queue.put(source_new)
                     else:
                         self.queue_list.pop(0)
@@ -388,9 +390,9 @@ async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
 
     for key, message in list(player.queue_message.items()):
         try:
-            await message.edit_original_response(embed=embed,
-                                                 view=None if player.queue.empty() else
-                                                 QueueMainView(player.queue, player.queue_list, 0))
+            await message.edit(embed=embed,
+                               view=None if player.queue.empty() else
+                               QueueMainView(player.queue, player.queue_list, 0))
         except discord.errors.InvalidArgument:
             del player.queue_message[key]
         except discord.errors.HTTPException as e:
