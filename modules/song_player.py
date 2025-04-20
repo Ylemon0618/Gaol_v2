@@ -386,7 +386,16 @@ async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
     if not player.queue.empty():
         embed = set_queue_field(embed, player.queue_list, 0)
 
-    for message in player.queue_message.values():
-        await message.edit_original_response(embed=embed,
-                                             view=None if player.queue.empty() else
-                                             QueueMainView(player.queue, player.queue_list, 0))
+    for key, message in list(player.queue_message.items()):
+        try:
+            await message.edit_original_response(embed=embed,
+                                                 view=None if player.queue.empty() else
+                                                 QueueMainView(player.queue, player.queue_list, 0))
+        except discord.errors.InvalidArgument:
+            del player.queue_message[key]
+        except discord.errors.HTTPException as e:
+            if "Invalid Webhook Token" in str(e):
+                new_message = await player.ctx.send(embed=embed,
+                                                    view=None if player.queue.empty() else
+                                                    QueueMainView(player.queue, player.queue_list, 0))
+                player.queue_message[key] = new_message
