@@ -239,9 +239,9 @@ class SongCustomPlaylistShowPrevButton(discord.ui.Button):
 
     async def callback(self, interaction: Interaction):
         self.page -= 1
-        await interaction.response.edit_message(embed=set_playlist_field(self.title, self.page),
-                                                view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title,
-                                                                                self.page))
+        await interaction.response.edit_message(
+            embed=set_playlist_field(self.title, self.page),
+            view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title, self.page))
 
 
 class SongCustomPlaylistShowNextButton(discord.ui.Button):
@@ -255,9 +255,9 @@ class SongCustomPlaylistShowNextButton(discord.ui.Button):
 
     async def callback(self, interaction: Interaction):
         self.page += 1
-        await interaction.response.edit_message(embed=set_playlist_field(self.title, self.page),
-                                                view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title,
-                                                                                self.page))
+        await interaction.response.edit_message(
+            embed=set_playlist_field(self.title, self.page),
+            view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title, self.page))
 
 
 class SongCustomPlaylistShowBackButton(discord.ui.Button):
@@ -457,11 +457,8 @@ class SongCustomPlaylistChangeOrderUpButton(discord.ui.Button):
 
         await interaction.response.edit_message(
             embed=set_playlist_field(self.title, self.page, "description", self.selected_title),
-            view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist,
-                                                   self.title, self.choice_num,
-                                                   self.page,
-                                                   self.selected_url,
-                                                   self.selected_title))
+            view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist, self.title, self.choice_num, self.page,
+                                                   self.selected_url, self.selected_title))
 
 
 class SongCustomPlaylistChangeOrderDownButton(discord.ui.Button):
@@ -491,11 +488,8 @@ class SongCustomPlaylistChangeOrderDownButton(discord.ui.Button):
 
         await interaction.response.edit_message(
             embed=set_playlist_field(self.title, self.page, "description", self.selected_title),
-            view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist,
-                                                   self.title, self.choice_num,
-                                                   self.page,
-                                                   self.selected_url,
-                                                   self.selected_title))
+            view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist, self.title, self.choice_num, self.page,
+                                                   self.selected_url, self.selected_title))
 
 
 class SongCustomPlaylistChangeOrderBackButton(discord.ui.Button):
