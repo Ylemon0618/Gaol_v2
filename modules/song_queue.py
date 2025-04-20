@@ -1,11 +1,15 @@
+import os
 import asyncio
 
 import discord
 from discord import Interaction
+from dotenv import load_dotenv
 
 from modules.make_embed import makeEmbed, Color
 
-song_cnt = 10  # The max number of songs in one page
+load_dotenv()
+
+song_cnt = int(os.environ.get('PAGE_SIZE'))
 
 
 class Title:

@@ -18,7 +18,7 @@ client = MongoClient(os.environ.get('MONGO_URI'))
 db = client["gaol"]
 custom_playlist = db["custom_playlist"]
 
-song_cnt = 10  # The max number of songs in one page
+song_cnt = int(os.environ.get('PAGE_SIZE'))
 
 
 def insert_song(user_id: int, url: str, title: str):
