@@ -1,15 +1,21 @@
 import os
 from math import ceil
+import time
+import asyncio
 from urllib import request, parse
 from yt_dlp import YoutubeDL
 
 import discord
-from discord import Interaction
+from discord import Interaction, ApplicationContext
+from discord.ext import commands
 from dotenv import load_dotenv
 
 from pymongo.mongo_client import MongoClient
 
 from modules.make_embed import makeEmbed, Color
+from modules.messages.embeds import SongEmbed
+from modules.song_player import YTDLSource, add_to_queue, SongPlayer
+from modules.song_change.change_channel import MoveChannelView, ResetQueueView
 
 load_dotenv()
 
@@ -53,17 +59,40 @@ def swap(playlist: list, title: list, idx1: int, idx2: int):
     return playlist, title
 
 
+async def join(ctx: ApplicationContext):
+    try:
+        channel = ctx.author.voice.channel
+    except AttributeError:
+        return await ctx.respond(embed=SongEmbed.Error.invalid_voice)
+
+    vc = ctx.voice_client
+
+    if vc:
+        if vc.channel.id == channel.id:
+            return
+
+        try:
+            return await ctx.respond(embed=SongEmbed.UI.convert, view=MoveChannelView(vc, channel))
+        except asyncio.TimeoutError:
+            return await ctx.respond(embed=SongEmbed.Error.timeout)
+    else:
+        try:
+            await channel.connect()
+        except asyncio.TimeoutError:
+            return await ctx.respond(embed=SongEmbed.Error.timeout)
+
+    await ctx.respond(embed=makeEmbed(":musical_note: Joined :musical_note:", channel.mention, Color.success))
+
+
 class SongCustomPlaylistView(discord.ui.View):
-    def __init__(self, user_id: int):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict, user_id: int):
         super().__init__(timeout=None)
 
-        self.user_id = user_id
-
-        self.add_item(SongCustomPlaylistSelect(user_id))
+        self.add_item(SongCustomPlaylistSelect(ctx, bot, players, user_id))
 
 
 class SongCustomPlaylistSelect(discord.ui.Select):
-    def __init__(self, user_id: int):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict, user_id: int):
         super().__init__(
             placeholder="Choose a task",
             options=[
@@ -76,6 +105,9 @@ class SongCustomPlaylistSelect(discord.ui.Select):
             ]
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         try:
             self.playlist = custom_playlist.find_one({"user_id": user_id})["playlist"]
@@ -85,28 +117,75 @@ class SongCustomPlaylistSelect(discord.ui.Select):
             self.playlist = []
             self.title = []
 
+    def get_player(self):
+        try:
+            player = self.players[self.ctx.guild.id]
+        except KeyError:
+            player = SongPlayer(self.ctx, self.players)
+            self.players[self.ctx.guild.id] = player
+
+        return player
+
     async def callback(self, interaction: Interaction):
         task = self.values[0]
 
         if task == "play":
             if not self.playlist:
-                return await interaction.response.edit_message(embed=makeEmbed(":warning: Error :warning:",
-                                                                               "Playlist is empty.\n플레이리스트가 비어 있습니다.",
-                                                                               Color.error))
+                return await interaction.response.edit_message(
+                    embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
+                                    "Playlist is empty.\n플레이리스트가 비어 있습니다.\n\nClick the button to add songs!\n버튼을 클릭하여 노래를 추가하세요!",
+                                    Color.warning),
+                    view=SongCustomPlaylistAddButton(self.user_id))
 
-            await interaction.response.edit_message(
-                embed=makeEmbed(":arrows_counterclockwise: Loading :arrows_counterclockwise:",
-                                "Loading...\n로딩 중...",
-                                Color.warning),
-                view=None)
+            await interaction.response.defer()
+            await self.ctx.trigger_typing()
 
+            if not self.ctx.voice_client:
+                await join(self.ctx)
+
+            vc = self.ctx.voice_client
+
+            if vc.channel != self.ctx.user.voice.channel:
+                return await self.ctx.respond(
+                    embed=makeEmbed("Confirm",
+                                    f"현재 봇이 {vc.channel.mention}에 접속해 있습니다.\n\n{self.ctx.user.voice.channel.mention}(으)로 옮기시려면 **확인**을 클릭 해 주세요.",
+                                    Color.warning),
+                    view=MoveChannelView(vc, self.ctx.user.voice.channel))
+
+            downloading = await self.ctx.respond(
+                embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
+                                "플레이리스트를 다운로드 중입니다...", Color.success))
+
+            player = self.get_player()
+
+            thumbnail = None
+            duration = 0
             for url in self.playlist:
-                # Add your code to play the song here
-                pass
+                source = await YTDLSource.create_source(self.ctx, url=url, requester=self.ctx.author,
+                                                        loop=self.bot.loop, download=True, send_message=False)
+                await add_to_queue(player, source)
 
-            await interaction.followup.send(embed=makeEmbed(":white_check_mark: Success :white_check_mark:",
-                                                            "Successfully added to queue.\n대기열에 성공적으로 추가되었습니다.",
-                                                            Color.success))
+                if not thumbnail:
+                    thumbnail = source.thumbnail
+                duration += source.duration
+
+            embed = makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
+                              f"Added custom playlist to the queue.\n커스텀 플레이리스트를 대기열에 추가했습니다.",
+                              Color.success)
+
+            embed.add_field(name="Owner", value=f"{self.ctx.author.mention}", inline=True)
+
+            if duration >= 3600:
+                duration_string = time.strftime('%H:%M:%S', time.gmtime(duration))
+            else:
+                duration_string = time.strftime('%M:%S', time.gmtime(duration))
+            embed.add_field(name="Duration", value=duration_string, inline=True)
+
+            embed.set_thumbnail(url=thumbnail)
+
+            embed.set_footer(text=self.ctx.author.display_name, icon_url=self.ctx.author.display_avatar.url)
+
+            await downloading.edit(embed=embed)
         elif task == "add":
             await interaction.response.send_modal(modal=SongCustomPlaylistAddModal(self.user_id, self.playlist))
         elif task == "show":
