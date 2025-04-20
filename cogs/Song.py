@@ -119,9 +119,6 @@ class Song(commands.Cog):
                     *, song: Option(str, name="song", name_localizations={"ko": "노래"},
                                     description="Enter the song to play",
                                     description_localizations={"ko": "재생 할 노래의 url이나 제목을 입력 해 주세요."})):
-        if ctx.user.voice is None:
-            return await ctx.respond(embed=SongEmbed.Error.not_connected)
-
         await ctx.defer()
         await ctx.trigger_typing()
 
@@ -136,50 +133,50 @@ class Song(commands.Cog):
                                                      Color.warning),
                                      view=MoveChannelView(vc, ctx.user.voice.channel,
                                                           ResetQueueView(self.bot, ctx, self.players, song)))
-        else:
-            player = self.get_player(ctx)
 
-            if "list=" in song:
-                pl = Playlist(song)
+        player = self.get_player(ctx)
 
-                songs = pl.video_urls if len(pl.video_urls) <= 20 else pl.video_urls[:20]
-                if not pl.video_urls:
-                    source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop, download=True)
-                    return await add_to_queue(player, source)
+        if "list=" in song:
+            pl = Playlist(song)
 
-                downloading = await ctx.respond(embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
-                                                                "플레이리스트를 다운로드 중입니다...", Color.success))
-
-                thumbnail = None
-                duration = 0
-                for url in songs:
-                    source = await YTDLSource.create_source(ctx, url=url, requester=ctx.author, loop=self.bot.loop, download=True,
-                                                            send_message=False)
-                    await add_to_queue(player, source)
-
-                    if not thumbnail:
-                        thumbnail = source.thumbnail
-                    duration += source.duration
-
-                embed = makeEmbed(":cd: Playlist added to queue :cd:", f"[**{pl.title}**](<{pl.playlist_url}>)", Color.success)
-
-                embed.add_field(name="Owner", value=f"[{pl.owner}](<{pl.owner_url}>)", inline=True)
-
-                if duration >= 3600:
-                    duration_string = time.strftime('%H:%M:%S', time.gmtime(duration))
-                else:
-                    duration_string = time.strftime('%M:%S', time.gmtime(duration))
-                embed.add_field(name="Duration", value=duration_string, inline=True)
-
-                embed.set_thumbnail(url=thumbnail)
-
-                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-
-                await downloading.edit(embed=embed)
-            else:
+            songs = pl.video_urls if len(pl.video_urls) <= 20 else pl.video_urls[:20]
+            if not pl.video_urls:
                 source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop, download=True)
+                return await add_to_queue(player, source)
 
+            downloading = await ctx.respond(embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
+                                                            "플레이리스트를 다운로드 중입니다...", Color.success))
+
+            thumbnail = None
+            duration = 0
+            for url in songs:
+                source = await YTDLSource.create_source(ctx, url=url, requester=ctx.author, loop=self.bot.loop, download=True,
+                                                        send_message=False)
                 await add_to_queue(player, source)
+
+                if not thumbnail:
+                    thumbnail = source.thumbnail
+                duration += source.duration
+
+            embed = makeEmbed(":cd: Play | 재생 :cd:", f"[**{pl.title}**](<{pl.playlist_url}>)", Color.success)
+
+            embed.add_field(name="Owner", value=f"[{pl.owner}](<{pl.owner_url}>)", inline=True)
+
+            if duration >= 3600:
+                duration_string = time.strftime('%H:%M:%S', time.gmtime(duration))
+            else:
+                duration_string = time.strftime('%M:%S', time.gmtime(duration))
+            embed.add_field(name="Duration", value=duration_string, inline=True)
+
+            embed.set_thumbnail(url=thumbnail)
+
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+
+            await downloading.edit(embed=embed)
+        else:
+            source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop, download=True)
+
+            await add_to_queue(player, source)
 
     # 재생 일시정지
     # Param: ctx
@@ -365,7 +362,7 @@ class Song(commands.Cog):
     async def playlist_(self, ctx: ApplicationContext):
         await ctx.respond(embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
                                           "Manage custom playlist.\n커스텀 플레이리스트를 관리합니다.", Color.success),
-                          view=SongCustomPlaylistView(ctx.author.id), ephemeral=True)
+                          view=SongCustomPlaylistView(ctx, self.bot, self.players, ctx.author.id), ephemeral=True)
 
 
 def setup(bot):
