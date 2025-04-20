@@ -151,7 +151,7 @@ class SongCustomPlaylistAddModal(discord.ui.Modal):
         if 'entries' in data:
             data = data['entries'][0]
 
-        insert_song(self.user_id, url, data['title'])
+        insert_song(self.user_id, f"https://www.youtube.com/watch?v={data['display_id']}", data['title'])
 
         embed = makeEmbed(":white_check_mark: Success :white_check_mark:",
                           f"Successfully added to playlist.\n플레이리스트에 성공적으로 추가되었습니다.\n\n[**{data['title']}**](<{data['webpage_url']}>)",
