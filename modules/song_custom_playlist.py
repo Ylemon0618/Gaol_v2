@@ -1,6 +1,6 @@
 import os
+from math import ceil
 from urllib import request, parse
-from functools import partial
 from yt_dlp import YoutubeDL
 
 import discord
@@ -8,10 +8,8 @@ from discord import Interaction
 from dotenv import load_dotenv
 
 from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 
 from modules.make_embed import makeEmbed, Color
-from modules.song_player import YTDLSource
 
 load_dotenv()
 
@@ -27,9 +25,32 @@ def insert_song(user_id: int, url: str, title: str):
     return custom_playlist.find_one_and_update({"user_id": user_id}, {"$push": {"playlist": url, "title": title}})
 
 
-# 바꿔야됨
-def delete_song(user_id: int, url: str):
-    return custom_playlist.find_one_and_update({"user_id": user_id}, {"$pull": {"playlist": url}})
+def delete_song(user_id: int, url: str, title: str):
+    return custom_playlist.find_one_and_update({"user_id": user_id}, {"$pull": {"playlist": url, "title": title}})
+
+
+def set_playlist_field(title: list, page: int, title_type: str = "field", selected: str = None):
+    embed = makeEmbed(f":notes: Playlist ({page + 1} / {ceil(len(title) / 10)}) :notes:", f"", Color.success)
+    for idx in range(page * song_cnt, page * song_cnt + song_cnt):
+        if idx >= len(title):
+            break
+
+        if title_type == "field":
+            embed.add_field(name=title[idx], value="", inline=False)
+        elif title_type == "description":
+            if selected == title[idx]:
+                embed.description += f"**{title[idx]}**\n\n"
+            else:
+                embed.description += f"{title[idx]}\n\n"
+
+    return embed
+
+
+def swap(playlist: list, title: list, idx1: int, idx2: int):
+    playlist[idx1], playlist[idx2] = playlist[idx2], playlist[idx1]
+    title[idx1], title[idx2] = title[idx2], title[idx1]
+
+    return playlist, title
 
 
 class SongCustomPlaylistView(discord.ui.View):
@@ -39,17 +60,6 @@ class SongCustomPlaylistView(discord.ui.View):
         self.user_id = user_id
 
         self.add_item(SongCustomPlaylistSelect(user_id))
-
-
-def set_playlist_field(title: list, page: int):
-    embed = makeEmbed(":notes: Playlist :notes:", "", Color.success)
-    for idx in range(page * song_cnt, page * song_cnt + song_cnt):
-        if idx >= len(title):
-            break
-
-        embed.add_field(name=title[idx], value="", inline=False)
-
-    return embed
 
 
 class SongCustomPlaylistSelect(discord.ui.Select):
@@ -124,7 +134,18 @@ class SongCustomPlaylistAddModal(discord.ui.Modal):
                                                     Color.warning),
                                                 view=None)
 
-        ytdl = YoutubeDL({'quiet': True})
+        ytdl = YoutubeDL({
+            'format': 'bestaudio/best',
+            'restrictfilenames': True,
+            'noplaylist': True,
+            'nocheckcertificate': True,
+            'ignoreerrors': False,
+            'logtostderr': False,
+            'quiet': True,
+            'no_warnings': True,
+            'default_search': 'auto',
+            'source_address': '0.0.0.0'
+        })
 
         data = ytdl.extract_info(url=url, download=False)
         if 'entries' in data:
@@ -200,7 +221,9 @@ class SongCustomPlaylistShowSelect(discord.ui.Select):
         title = self.title[choice_num]
 
         embed = makeEmbed(":notes: Playlist - selected :notes:", f"[**{title}**](<{url}>)", Color.success)
-        await interaction.response.edit_message(embed=embed, view=SongCustomPlaylistSelectedView(self.user_id, self.playlist, self.title, choice_num))
+        await interaction.response.edit_message(embed=embed,
+                                                view=SongCustomPlaylistSelectedView(self.user_id, self.playlist,
+                                                                                    self.title, choice_num, self.page))
 
 
 class SongCustomPlaylistShowPrevButton(discord.ui.Button):
@@ -236,21 +259,24 @@ class SongCustomPlaylistShowNextButton(discord.ui.Button):
 
 
 class SongCustomPlaylistSelectedView(discord.ui.View):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int):
+    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int):
         super().__init__(timeout=None)
 
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
         self.choice_num = choice_num
+        self.page = page
         self.selected_url = playlist[choice_num]
         self.selected_title = title[choice_num]
 
-        self.add_item(SongCustomPlaylistSelectedSelect(user_id, playlist, title, choice_num))
+        self.add_item(SongCustomPlaylistSelectedSelect(user_id, playlist, title, choice_num, page, self.selected_url,
+                                                       self.selected_title))
 
 
 class SongCustomPlaylistSelectedSelect(discord.ui.Select):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int):
+    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
+                 selected_title: str):
         super().__init__(
             placeholder="Choose a task",
             options=[
@@ -265,3 +291,112 @@ class SongCustomPlaylistSelectedSelect(discord.ui.Select):
         self.playlist = playlist
         self.title = title
         self.choice_num = choice_num
+        self.page = page
+        self.selected_url = selected_url
+        self.selected_title = selected_title
+
+    async def callback(self, interaction: Interaction):
+        task = self.values[0]
+
+        if task == "delete":
+            delete_song(self.user_id, self.selected_url, self.selected_title)
+
+            await interaction.response.edit_message(embed=makeEmbed(":white_check_mark: Success :white_check_mark:",
+                                                                    "Successfully deleted from playlist.\n플레이리스트에서 성공적으로 삭제되었습니다.",
+                                                                    Color.success),
+                                                    view=None)
+        elif task == "change":
+            await interaction.response.edit_message(
+                embed=set_playlist_field(self.title, self.page, "description", self.selected_title),
+                view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist,
+                                                       self.title, self.choice_num,
+                                                       self.page,
+                                                       self.selected_url,
+                                                       self.selected_title))
+
+
+class SongCustomPlaylistChangeOrderView(discord.ui.View):
+    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
+                 selected_title: str):
+        super().__init__(timeout=None)
+
+        self.user_id = user_id
+        self.playlist = playlist
+        self.title = title
+        self.choice_num = choice_num
+        self.page = page
+        self.selected_url = selected_url
+        self.selected_title = selected_title
+
+        self.add_item(SongCustomPlaylistChangeOrderUpButton(user_id, playlist, title, choice_num, page, selected_url,
+                                                            selected_title))
+        self.add_item(SongCustomPlaylistChangeOrderDownButton(user_id, playlist, title, choice_num, page, selected_url,
+                                                              selected_title))
+
+
+class SongCustomPlaylistChangeOrderUpButton(discord.ui.Button):
+    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
+                 selected_title: str):
+        super().__init__(
+            label="", style=discord.ButtonStyle.primary, emoji="⬆️",
+        )
+
+        self.user_id = user_id
+        self.playlist = playlist
+        self.title = title
+        self.choice_num = choice_num
+        self.page = page
+        self.selected_url = selected_url
+        self.selected_title = selected_title
+
+    async def callback(self, interaction: Interaction):
+        self.playlist, self.title = swap(self.playlist, self.title, self.choice_num,
+                                         (self.choice_num - 1) % len(self.playlist))
+
+        self.choice_num = (self.choice_num - 1) % len(self.playlist)
+        self.page = self.choice_num // song_cnt
+
+        custom_playlist.update_one({"user_id": self.user_id}, {"$set": {"playlist": self.playlist}})
+        custom_playlist.update_one({"user_id": self.user_id}, {"$set": {"title": self.title}})
+
+        await interaction.response.edit_message(
+            embed=set_playlist_field(self.title, self.page, "description", self.selected_title),
+            view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist,
+                                                   self.title, self.choice_num,
+                                                   self.page,
+                                                   self.selected_url,
+                                                   self.selected_title))
+
+
+class SongCustomPlaylistChangeOrderDownButton(discord.ui.Button):
+    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
+                 selected_title: str):
+        super().__init__(
+            label="", style=discord.ButtonStyle.primary, emoji="⬇️",
+        )
+
+        self.user_id = user_id
+        self.playlist = playlist
+        self.title = title
+        self.choice_num = choice_num
+        self.page = page
+        self.selected_url = selected_url
+        self.selected_title = selected_title
+
+    async def callback(self, interaction: Interaction):
+        self.playlist, self.title = swap(self.playlist, self.title, self.choice_num,
+                                         (self.choice_num + 1) % len(self.playlist))
+
+        self.choice_num = (self.choice_num + 1) % len(self.playlist)
+        self.page = self.choice_num // song_cnt
+
+        custom_playlist.update_one({"user_id": self.user_id}, {"$set": {"playlist": self.playlist}})
+        custom_playlist.update_one({"user_id": self.user_id}, {"$set": {"title": self.title}})
+
+        await interaction.response.edit_message(
+            embed=set_playlist_field(self.title, self.page, "description", self.selected_title),
+            view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist,
+                                                   self.title, self.choice_num,
+                                                   self.page,
+                                                   self.selected_url,
+                                                   self.selected_title))
