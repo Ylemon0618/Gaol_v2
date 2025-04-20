@@ -15,7 +15,7 @@ from pymongo.mongo_client import MongoClient
 from modules.make_embed import makeEmbed, Color
 from modules.messages.embeds import SongEmbed
 from modules.song_player import YTDLSource, add_to_queue, SongPlayer
-from modules.song_change.change_channel import MoveChannelView, ResetQueueView
+from modules.song_change.change_channel import MoveChannelView
 
 load_dotenv()
 
@@ -53,8 +53,8 @@ def set_playlist_field(title: list, page: int, title_type: str = "field", select
 
 
 def swap(playlist: list, title: list, idx1: int, idx2: int):
-    playlist[idx1], playlist[idx2] = playlist[idx2], playlist[idx1]
-    title[idx1], title[idx2] = title[idx2], title[idx1]
+    playlist.insert(idx2, playlist.pop(idx1))
+    title.insert(idx2, title.pop(idx1))
 
     return playlist, title
 
@@ -196,9 +196,10 @@ class SongCustomPlaylistSelect(discord.ui.Select):
                                     Color.warning),
                     view=SongCustomPlaylistAddButton(self.user_id))
 
-            await interaction.response.edit_message(embed=set_playlist_field(self.title, 0),
-                                                    view=SongCustomPlaylistShowView(self.user_id, self.playlist,
-                                                                                    self.title))
+            await interaction.response.edit_message(
+                embed=set_playlist_field(self.title, 0),
+                view=SongCustomPlaylistShowView(self.ctx, self.bot, self.players,
+                                                self.user_id, self.playlist, self.title))
 
 
 class SongCustomPlaylistAddButton(discord.ui.Button):
@@ -291,34 +292,31 @@ class SongCustomPlaylistAddModal(discord.ui.Modal):
 
 
 class SongCustomPlaylistShowView(discord.ui.View):
-    def __init__(self, user_id: int, playlist: list, title: list, page: int = 0):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, page: int = 0):
         super().__init__(timeout=None)
 
-        self.user_id = user_id
-        self.playlist = playlist
-        self.title = title
-        self.page = page
-
-        self.add_item(SongCustomPlaylistShowSelect(user_id, playlist, title, page))
+        self.add_item(SongCustomPlaylistShowSelect(ctx, bot, players, user_id, playlist, title, page))
 
         min_page = 0
         max_page = (len(title) - 1) // song_cnt
 
         if page == min_page:
-            self.add_item(SongCustomPlaylistShowPrevButton(user_id, playlist, title, page, True))
+            self.add_item(SongCustomPlaylistShowPrevButton(ctx, bot, players, user_id, playlist, title, page, True))
         else:
-            self.add_item(SongCustomPlaylistShowPrevButton(user_id, playlist, title, page))
+            self.add_item(SongCustomPlaylistShowPrevButton(ctx, bot, players, user_id, playlist, title, page))
 
         if page == max_page:
-            self.add_item(SongCustomPlaylistShowNextButton(user_id, playlist, title, page, True))
+            self.add_item(SongCustomPlaylistShowNextButton(ctx, bot, players, user_id, playlist, title, page, True))
         else:
-            self.add_item(SongCustomPlaylistShowNextButton(user_id, playlist, title, page))
+            self.add_item(SongCustomPlaylistShowNextButton(ctx, bot, players, user_id, playlist, title, page))
 
-        self.add_item(SongCustomPlaylistShowBackButton(user_id))
+        self.add_item(SongCustomPlaylistShowBackButton(ctx, bot, players, user_id))
 
 
 class SongCustomPlaylistShowSelect(discord.ui.Select):
-    def __init__(self, user_id: int, playlist: list, title: list, page: int):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, page: int):
         options = []
         for idx in range(page * song_cnt, page * song_cnt + song_cnt):
             if idx >= len(title):
@@ -331,6 +329,9 @@ class SongCustomPlaylistShowSelect(discord.ui.Select):
             options=options
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -343,14 +344,18 @@ class SongCustomPlaylistShowSelect(discord.ui.Select):
 
         await interaction.response.edit_message(
             embed=makeEmbed(":notes: Playlist - selected :notes:", f"[**{title}**](<{url}>)", Color.success),
-            view=SongCustomPlaylistSelectedView(self.user_id, self.playlist,
-                                                self.title, choice_num, self.page))
+            view=SongCustomPlaylistSelectedView(self.ctx, self.bot, self.players,
+                                                self.user_id, self.playlist, self.title, choice_num, self.page))
 
 
 class SongCustomPlaylistShowPrevButton(discord.ui.Button):
-    def __init__(self, user_id: int, playlist: list, title: list, page: int, disabled: bool = False):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, page: int, disabled: bool = False):
         super().__init__(style=discord.ButtonStyle.primary, label="Prev", emoji="⬅️", disabled=disabled)
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -360,13 +365,18 @@ class SongCustomPlaylistShowPrevButton(discord.ui.Button):
         self.page -= 1
         await interaction.response.edit_message(
             embed=set_playlist_field(self.title, self.page),
-            view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title, self.page))
+            view=SongCustomPlaylistShowView(self.ctx, self.bot, self.players,
+                                            self.user_id, self.playlist, self.title, self.page))
 
 
 class SongCustomPlaylistShowNextButton(discord.ui.Button):
-    def __init__(self, user_id: int, playlist: list, title: list, page: int, disabled: bool = False):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, page: int, disabled: bool = False):
         super().__init__(style=discord.ButtonStyle.primary, label="Next", emoji="➡️", disabled=disabled)
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -376,28 +386,37 @@ class SongCustomPlaylistShowNextButton(discord.ui.Button):
         self.page += 1
         await interaction.response.edit_message(
             embed=set_playlist_field(self.title, self.page),
-            view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title, self.page))
+            view=SongCustomPlaylistShowView(self.ctx, self.bot, self.players,
+                                            self.user_id, self.playlist, self.title, self.page))
 
 
 class SongCustomPlaylistShowBackButton(discord.ui.Button):
-    def __init__(self, user_id: int):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict, user_id: int):
         super().__init__(
             label="Back", style=discord.ButtonStyle.green, emoji="🔙"
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
 
     async def callback(self, interaction: Interaction):
-        await interaction.response.edit_message(embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
-                                                                "Manage custom playlist.\n커스텀 플레이리스트를 관리합니다.",
-                                                                Color.success),
-                                                view=SongCustomPlaylistView(self.user_id))
+        await interaction.response.edit_message(
+            embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
+                            "Manage custom playlist.\n커스텀 플레이리스트를 관리합니다.",
+                            Color.success),
+            view=SongCustomPlaylistView(self.ctx, self.bot, self.players, self.user_id))
 
 
 class SongCustomPlaylistSelectedView(discord.ui.View):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, choice_num: int, page: int):
         super().__init__(timeout=None)
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -406,14 +425,15 @@ class SongCustomPlaylistSelectedView(discord.ui.View):
         self.selected_url = playlist[choice_num]
         self.selected_title = title[choice_num]
 
-        self.add_item(SongCustomPlaylistSelectedSelect(user_id, playlist, title, choice_num, page, self.selected_url,
-                                                       self.selected_title))
-        self.add_item(SongCustomPlaylistSelectedBackButton(user_id, playlist, title))
+        self.add_item(SongCustomPlaylistSelectedSelect(
+            ctx, bot, players, user_id, playlist, title, choice_num, page, self.selected_url, self.selected_title))
+        self.add_item(SongCustomPlaylistSelectedBackButton(ctx, bot, players, user_id, playlist, title))
 
 
 class SongCustomPlaylistSelectedSelect(discord.ui.Select):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
-                 selected_title: str):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, choice_num: int, page: int,
+                 selected_url: str, selected_title: str):
         super().__init__(
             placeholder="Choose a task",
             options=[
@@ -424,6 +444,9 @@ class SongCustomPlaylistSelectedSelect(discord.ui.Select):
             ]
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -444,21 +467,28 @@ class SongCustomPlaylistSelectedSelect(discord.ui.Select):
                 embed=makeEmbed(":white_check_mark: Success :white_check_mark:",
                                 "Successfully deleted from playlist.\n플레이리스트에서 성공적으로 삭제되었습니다.",
                                 Color.success),
-                view=SongCustomPlaylistDeletedView(self.user_id, self.playlist, self.title, self.choice_num,
+                view=SongCustomPlaylistDeletedView(self.ctx, self.bot, self.players,
+                                                   self.user_id, self.playlist, self.title, self.choice_num,
                                                    self.selected_url, self.selected_title))
         elif task == "change":
             await interaction.response.edit_message(
                 embed=set_playlist_field(self.title, self.page, "description", self.selected_title),
-                view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist, self.title, self.choice_num,
-                                                       self.page, self.selected_url, self.selected_title))
+                view=SongCustomPlaylistChangeOrderView(
+                    self.ctx, self.bot, self.players,
+                    self.user_id, self.playlist, self.title, self.choice_num, self.page,
+                    self.selected_url, self.selected_title))
 
 
 class SongCustomPlaylistSelectedBackButton(discord.ui.Button):
-    def __init__(self, user_id: int, playlist: list, title: list):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list):
         super().__init__(
             label="Back", style=discord.ButtonStyle.green, emoji="🔙"
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -466,14 +496,19 @@ class SongCustomPlaylistSelectedBackButton(discord.ui.Button):
     async def callback(self, interaction: Interaction):
         await interaction.response.edit_message(
             embed=set_playlist_field(self.title, 0),
-            view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title, 0))
+            view=SongCustomPlaylistShowView(self.ctx, self.bot, self.players,
+                                            self.user_id, self.playlist, self.title))
 
 
 class SongCustomPlaylistDeletedView(discord.ui.View):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, selected_url: str,
-                 selected_title: str):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, choice_num: int,
+                 selected_url: str, selected_title: str):
         super().__init__(timeout=None)
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -482,17 +517,22 @@ class SongCustomPlaylistDeletedView(discord.ui.View):
         self.selected_title = selected_title
 
         self.add_item(
-            SongCustomPlaylistDeletedCancelButton(user_id, playlist, title, choice_num, selected_url, selected_title))
-        self.add_item(SongCustomPlaylistDeletedBackButton(user_id, playlist, title))
+            SongCustomPlaylistDeletedCancelButton(
+                ctx, bot, players, user_id, playlist, title, choice_num, selected_url, selected_title))
+        self.add_item(SongCustomPlaylistDeletedBackButton(ctx, bot, players, user_id, playlist, title))
 
 
 class SongCustomPlaylistDeletedCancelButton(discord.ui.Button):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, selected_url: str,
-                 selected_title: str):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, choice_num: int,
+                 selected_url: str, selected_title: str):
         super().__init__(
             label="Cancel", style=discord.ButtonStyle.red, emoji="✖"
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -509,15 +549,19 @@ class SongCustomPlaylistDeletedCancelButton(discord.ui.Button):
 
         return await interaction.response.edit_message(
             embed=set_playlist_field(self.title, 0),
-            view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title))
+            view=SongCustomPlaylistShowView(self.ctx, self.bot, self.players, self.user_id, self.playlist, self.title))
 
 
 class SongCustomPlaylistDeletedBackButton(discord.ui.Button):
-    def __init__(self, user_id: int, playlist: list, title: list):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list):
         super().__init__(
             label="Back", style=discord.ButtonStyle.green, emoji="🔙"
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -525,14 +569,18 @@ class SongCustomPlaylistDeletedBackButton(discord.ui.Button):
     async def callback(self, interaction: Interaction):
         await interaction.response.edit_message(
             embed=set_playlist_field(self.title, 0),
-            view=SongCustomPlaylistShowView(self.user_id, self.playlist, self.title))
+            view=SongCustomPlaylistShowView(self.ctx, self.bot, self.players, self.user_id, self.playlist, self.title))
 
 
 class SongCustomPlaylistChangeOrderView(discord.ui.View):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
-                 selected_title: str):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, choice_num: int, page: int,
+                 selected_url: str, selected_title: str):
         super().__init__(timeout=None)
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -541,21 +589,25 @@ class SongCustomPlaylistChangeOrderView(discord.ui.View):
         self.selected_url = selected_url
         self.selected_title = selected_title
 
-        self.add_item(SongCustomPlaylistChangeOrderUpButton(user_id, playlist, title, choice_num, page, selected_url,
-                                                            selected_title))
-        self.add_item(SongCustomPlaylistChangeOrderDownButton(user_id, playlist, title, choice_num, page, selected_url,
-                                                              selected_title))
-        self.add_item(SongCustomPlaylistChangeOrderBackButton(user_id, playlist, title, choice_num, page, selected_url,
-                                                              selected_title))
+        self.add_item(SongCustomPlaylistChangeOrderUpButton(
+            ctx, bot, players, user_id, playlist, title, choice_num, page, selected_url, selected_title))
+        self.add_item(SongCustomPlaylistChangeOrderDownButton(
+            ctx, bot, players, user_id, playlist, title, choice_num, page, selected_url, selected_title))
+        self.add_item(SongCustomPlaylistChangeOrderBackButton(
+            ctx, bot, players, user_id, playlist, title, choice_num, page, selected_url, selected_title))
 
 
 class SongCustomPlaylistChangeOrderUpButton(discord.ui.Button):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
-                 selected_title: str):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, choice_num: int, page: int,
+                 selected_url: str, selected_title: str):
         super().__init__(
             label="", style=discord.ButtonStyle.primary, emoji="⬆️",
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -565,8 +617,8 @@ class SongCustomPlaylistChangeOrderUpButton(discord.ui.Button):
         self.selected_title = selected_title
 
     async def callback(self, interaction: Interaction):
-        self.playlist, self.title = swap(self.playlist, self.title, self.choice_num,
-                                         (self.choice_num - 1) % len(self.playlist))
+        self.playlist, self.title = swap(self.playlist, self.title,
+                                         self.choice_num, (self.choice_num - 1) % len(self.playlist))
 
         self.choice_num = (self.choice_num - 1) % len(self.playlist)
         self.page = self.choice_num // song_cnt
@@ -576,17 +628,22 @@ class SongCustomPlaylistChangeOrderUpButton(discord.ui.Button):
 
         await interaction.response.edit_message(
             embed=set_playlist_field(self.title, self.page, "description", self.selected_title),
-            view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist, self.title, self.choice_num, self.page,
+            view=SongCustomPlaylistChangeOrderView(self.ctx, self.bot, self.players,
+                                                   self.user_id, self.playlist, self.title, self.choice_num, self.page,
                                                    self.selected_url, self.selected_title))
 
 
 class SongCustomPlaylistChangeOrderDownButton(discord.ui.Button):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
-                 selected_title: str):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, choice_num: int, page: int,
+                 selected_url: str, selected_title: str):
         super().__init__(
             label="", style=discord.ButtonStyle.primary, emoji="⬇️",
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -596,8 +653,8 @@ class SongCustomPlaylistChangeOrderDownButton(discord.ui.Button):
         self.selected_title = selected_title
 
     async def callback(self, interaction: Interaction):
-        self.playlist, self.title = swap(self.playlist, self.title, self.choice_num,
-                                         (self.choice_num + 1) % len(self.playlist))
+        self.playlist, self.title = swap(self.playlist, self.title,
+                                         self.choice_num, (self.choice_num + 1) % len(self.playlist))
 
         self.choice_num = (self.choice_num + 1) % len(self.playlist)
         self.page = self.choice_num // song_cnt
@@ -607,17 +664,22 @@ class SongCustomPlaylistChangeOrderDownButton(discord.ui.Button):
 
         await interaction.response.edit_message(
             embed=set_playlist_field(self.title, self.page, "description", self.selected_title),
-            view=SongCustomPlaylistChangeOrderView(self.user_id, self.playlist, self.title, self.choice_num, self.page,
+            view=SongCustomPlaylistChangeOrderView(self.ctx, self.bot, self.players,
+                                                   self.user_id, self.playlist, self.title, self.choice_num, self.page,
                                                    self.selected_url, self.selected_title))
 
 
 class SongCustomPlaylistChangeOrderBackButton(discord.ui.Button):
-    def __init__(self, user_id: int, playlist: list, title: list, choice_num: int, page: int, selected_url: str,
-                 selected_title: str):
+    def __init__(self, ctx: ApplicationContext, bot: commands.Bot, players: dict,
+                 user_id: int, playlist: list, title: list, choice_num: int, page: int,
+                 selected_url: str, selected_title: str):
         super().__init__(
             label="Back", style=discord.ButtonStyle.green, emoji="🔙"
         )
 
+        self.ctx = ctx
+        self.bot = bot
+        self.players = players
         self.user_id = user_id
         self.playlist = playlist
         self.title = title
@@ -630,5 +692,5 @@ class SongCustomPlaylistChangeOrderBackButton(discord.ui.Button):
         await interaction.response.edit_message(
             embed=makeEmbed(":notes: Playlist - selected :notes:",
                             f"[**{self.selected_title}**](<{self.selected_url}>)", Color.success),
-            view=SongCustomPlaylistSelectedView(self.user_id, self.playlist,
-                                                self.title, self.choice_num, self.page))
+            view=SongCustomPlaylistSelectedView(self.ctx, self.bot, self.players,
+                                                self.user_id, self.playlist, self.title, self.choice_num, self.page))
