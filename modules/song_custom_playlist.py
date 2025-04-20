@@ -67,6 +67,8 @@ class SongCustomPlaylistSelect(discord.ui.Select):
         super().__init__(
             placeholder="Choose a task",
             options=[
+                discord.SelectOption(label="Play | 재생", value="play", emoji="▶️",
+                                     description="Add your playlist to the queue | 플레이리스트를 대기열에 추가합니다."),
                 discord.SelectOption(label="Add song | 노래 추가", value="add", emoji="➕",
                                      description="Add a song to the playlist | 플레이리스트에 노래를 추가합니다."),
                 discord.SelectOption(label="Show playlist | 플레이리스트 조회", value="show", emoji="📜",
@@ -86,12 +88,50 @@ class SongCustomPlaylistSelect(discord.ui.Select):
     async def callback(self, interaction: Interaction):
         task = self.values[0]
 
-        if task == "add":
+        if task == "play":
+            if not self.playlist:
+                return await interaction.response.edit_message(embed=makeEmbed(":warning: Error :warning:",
+                                                                               "Playlist is empty.\n플레이리스트가 비어 있습니다.",
+                                                                               Color.error))
+
+            await interaction.response.edit_message(
+                embed=makeEmbed(":arrows_counterclockwise: Loading :arrows_counterclockwise:",
+                                "Loading...\n로딩 중...",
+                                Color.warning),
+                view=None)
+
+            for url in self.playlist:
+                # Add your code to play the song here
+                pass
+
+            await interaction.followup.send(embed=makeEmbed(":white_check_mark: Success :white_check_mark:",
+                                                            "Successfully added to queue.\n대기열에 성공적으로 추가되었습니다.",
+                                                            Color.success))
+        elif task == "add":
             await interaction.response.send_modal(modal=SongCustomPlaylistAddModal(self.user_id, self.playlist))
         elif task == "show":
+            if not self.playlist:
+                return await interaction.response.edit_message(
+                    embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
+                                    "Playlist is empty.\n플레이리스트가 비어 있습니다.\n\nClick the button to add songs!\n버튼을 클릭하여 노래를 추가하세요!",
+                                    Color.warning),
+                    view=SongCustomPlaylistAddButton(self.user_id))
+
             await interaction.response.edit_message(embed=set_playlist_field(self.title, 0),
                                                     view=SongCustomPlaylistShowView(self.user_id, self.playlist,
                                                                                     self.title))
+
+
+class SongCustomPlaylistAddButton(discord.ui.Button):
+    def __init__(self, user_id: int):
+        super().__init__(
+            label="Add song", style=discord.ButtonStyle.blurple, emoji="➕"
+        )
+
+        self.user_id = user_id
+
+    async def callback(self, interaction: Interaction):
+        await interaction.response.send_modal(modal=SongCustomPlaylistAddModal(self.user_id, []))
 
 
 class SongCustomPlaylistAddModal(discord.ui.Modal):
