@@ -365,7 +365,7 @@ class Song(commands.Cog):
     async def playlist_(self, ctx: ApplicationContext):
         await ctx.respond(embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
                                           "Manage custom playlist.\n커스텀 플레이리스트를 관리합니다.", Color.success),
-                          view=SongCustomPlaylistView(ctx.author.id))
+                          view=SongCustomPlaylistView(ctx.author.id), ephemeral=True)
 
 
 def setup(bot):
