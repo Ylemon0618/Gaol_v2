@@ -299,29 +299,6 @@ class InquiryModal(discord.ui.Modal):
             view=None)
 
 
-class CalculatorView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-        self.formula = ""
-
-    def add_formula(self, new: str):
-        self.formula += new
-        return makeEmbed("🧮 Calculator | 계산기 🧮", self.formula, Color.success)
-
-    @discord.ui.button(label="", style=discord.ButtonStyle.gray, emoji="<:sqrt:1346488974918684793>")
-    async def button_sqrt(self, button: discord.ui.Button, interaction: Interaction):
-        await interaction.response.edit_message(embed=self.add_formula("√"))
-
-    @discord.ui.button(label="(", style=discord.ButtonStyle.gray)
-    async def button_bracket_open(self, button: discord.ui.Button, interaction: Interaction):
-        await interaction.response.edit_message(embed=self.add_formula("("))
-
-    @discord.ui.button(label=")", style=discord.ButtonStyle.gray)
-    async def button_bracket_close(self, button: discord.ui.Button, interaction: Interaction):
-        await interaction.response.edit_message(embed=self.add_formula(")"))
-
-
 class Utils(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -344,13 +321,6 @@ class Utils(commands.Cog):
     async def help_(self, ctx: ApplicationContext):
         embed = HelpEmbed.choose_item
         await ctx.respond(embed=embed, view=HelpView(ctx.bot), ephemeral=True)
-
-    @file_commands.command(name="calculator", name_localizations={"ko": "계산기"},
-                           description="Show a calculator",
-                           description_localizations={"ko": "계산기를 표시합니다."})
-    async def calculator_(self, ctx: ApplicationContext):
-        embed = makeEmbed("🧮 Calculator | 계산기 🧮", "", Color.success)
-        await ctx.respond(embed=embed, view=CalculatorView(), ephemeral=True)
 
 
 def setup(bot):
