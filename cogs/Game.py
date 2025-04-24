@@ -6,7 +6,9 @@ from discord import Option, OptionChoice, ApplicationContext
 from discord.ext import commands
 from dotenv import load_dotenv
 
+from modules.game_ui.coin_toss import coin_toss
 from modules.make_embed import makeEmbed, Color
+from modules.game_ui import *
 
 load_dotenv()
 
@@ -42,65 +44,6 @@ class Game(commands.Cog):
                                 description_localizations={"ko": "게임을 진행할 유저를 선택해 주세요."}) = None):
         emoji = {"rock": "👊", "paper": "✋", "scissors": "✌️"}
 
-        def check_winner(choice1, choice2):
-            if choice1 == choice2:
-                return 0
-            elif choice1 == "rock":
-                if choice2 == "paper":
-                    return 2
-                else:
-                    return 1
-            elif choice1 == "paper":
-                if choice2 == "scissors":
-                    return 2
-                else:
-                    return 1
-            elif choice1 == "scissors":
-                if choice2 == "rock":
-                    return 2
-                else:
-                    return 1
-
-        class RPSView(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=None)
-
-                self.add_item(RPSSelect())
-
-        class RPSSelect(discord.ui.Select):
-            def __init__(self):
-                super().__init__(
-                    placeholder="Choose a hand",
-                    options=[
-                        discord.SelectOption(label="Rock", value="rock", emoji="👊"),
-                        discord.SelectOption(label="Paper", value="paper", emoji="✋"),
-                        discord.SelectOption(label="Scissors", value="scissors", emoji="✌️")
-                    ]
-                )
-
-            async def callback(self, interaction: discord.Interaction):
-                choice2 = self.values[0]
-
-                await interaction.response.edit_message(embed=makeEmbed(":fist: :raised_hand: :v:",
-                                                                        f"{ctx.user.mention}님이 가위바위보를 신청했습니다!\n\n나의 선택: {emoji.get(choice2)}",
-                                                                        Color.success),
-                                                        view=None)
-
-                if not check_winner(choice, choice2):
-                    result = makeEmbed(":fist: :raised_hand: :v:",
-                                       f"무승부!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
-                                       Color.success)
-                elif check_winner(choice, choice2) == 1:
-                    result = makeEmbed(":fist: :raised_hand: :v:",
-                                       f"{ctx.author.mention} 승리!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
-                                       Color.success)
-                else:
-                    result = makeEmbed(":fist: :raised_hand: :v:",
-                                       f"{user.mention} 승리!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
-                                       Color.success)
-
-                await ctx.channel.send(f"{ctx.author.mention} {user.mention}", embed=result)
-
         if not user:
             choice_list = ["rock", "paper", "scissors"]
             bot_choice = random.choice(choice_list)
@@ -128,6 +71,21 @@ class Game(commands.Cog):
             embed = makeEmbed(":fist: :raised_hand: :v:", f"{ctx.user.mention}님이 가위바위보를 신청했습니다!", Color.success)
             dm = await user.create_dm()
             await dm.send(embed=embed, view=RPSView())
+
+    @game_commands.command(name="gamble", name_localizations={"ko": "도박"},
+                           description="Play a gambling game",
+                           description_localizations={"ko": "도박 게임을 플레이합니다."})
+    async def gamble_(self, ctx: ApplicationContext,
+                      option: Option(str, name="option", name_localizations={"ko": "선택"},
+                                     description="Choose a game to play",
+                                     description_localizations={"ko": "플레이 할 게임을 선택 해 주세요."},
+                                     choices=[
+                                         OptionChoice(name="Coin toss", value="coin", name_localizations={"ko": "동전 던지기"}),
+                                         OptionChoice(name="Blackjack", value="blackjack", name_localizations={"ko": "블랙잭"}),
+                                         OptionChoice(name="Slot machine", value="slot", name_localizations={"ko": "슬롯 머신"}),
+                                     ])):
+        if option == "coin":
+            await coin_toss(ctx)
 
 
 def setup(bot):
