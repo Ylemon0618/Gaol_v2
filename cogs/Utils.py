@@ -322,6 +322,22 @@ class Utils(commands.Cog):
         embed = HelpEmbed.choose_item
         await ctx.respond(embed=embed, view=HelpView(ctx.bot), ephemeral=True)
 
+    @file_commands.command(name="info", name_localizations={"ko": "정보"},
+                            description="Get the bot's information",
+                            description_localizations={"ko": "봇의 정보를 확인합니다."})
+    async def info_(self, ctx: ApplicationContext):
+        embed = makeEmbed(f"For More Convenience: {self.bot.user.name}", "", Color.success)
+
+        embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url)
+
+        embed.add_field(name="Version | 버전", value="Beta 0.0.1", inline=False)
+        embed.add_field(name="Ping | 핑", value=f"{round(self.bot.latency * 1000)}ms", inline=False)
+        embed.add_field(name="Guilds | 서버 수", value=len(self.bot.guilds), inline=True)
+        embed.add_field(name="Users | 유저 수", value=len(self.bot.users), inline=True)
+        embed.add_field(name="Commands | 명령어", value="Enter `/utils help`!\n/`유틸리티 도움`을 입력해 보세요!", inline=False)
+
+        await ctx.respond(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Utils(bot))
