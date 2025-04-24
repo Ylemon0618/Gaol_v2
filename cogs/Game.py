@@ -30,9 +30,12 @@ class Game(commands.Cog):
                                   description="Choose rock, paper, or scissors",
                                   description_localizations={"ko": "가위, 바위, 보 중 하나를 선택해 주세요."},
                                   choices=[
-                                      OptionChoice(name="Rock | 바위", value="rock"),
-                                      OptionChoice(name="Paper | 보", value="paper"),
-                                      OptionChoice(name="Scissors | 가위", value="scissors")
+                                      OptionChoice(name="Rock", value="rock",
+                                                   name_localizations={"ko": "바위"}),
+                                      OptionChoice(name="Paper", value="paper",
+                                                   name_localizations={"ko": "보"}),
+                                      OptionChoice(name="Scissors", value="scissors",
+                                                   name_localizations={"ko": "가위"})
                                   ]),
                    user: Option(discord.Member, name="user", name_localizations={"ko": "유저"},
                                 description="Choose user to play",
