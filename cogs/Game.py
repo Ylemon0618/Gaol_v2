@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from modules.game_ui.coin_toss import coin_toss
 from modules.make_embed import makeEmbed, Color
 from modules.game_ui import *
+from modules.check_balance import *
 
 load_dotenv()
 
@@ -76,7 +77,7 @@ class Game(commands.Cog):
                            description="Play a gambling game",
                            description_localizations={"ko": "도박 게임을 플레이합니다."})
     async def gamble_(self, ctx: ApplicationContext,
-                      option: Option(str, name="option", name_localizations={"ko": "선택"},
+                      option: Option(str, name="game", name_localizations={"ko": "게임"},
                                      description="Choose a game to play",
                                      description_localizations={"ko": "플레이 할 게임을 선택 해 주세요."},
                                      choices=[
@@ -86,6 +87,15 @@ class Game(commands.Cog):
                                      ])):
         if option == "coin":
             await coin_toss(ctx)
+
+    @game_commands.command(name="balance", name_localizations={"ko": "잔고"},
+                           description="Check your balance",
+                           description_localizations={"ko": "잔고를 확인합니다."})
+    async def balance_(self, ctx: ApplicationContext):
+        balance = get_user_balance(ctx.author.id)
+
+        embed = makeEmbed(":moneybag: Balance | 잔고 :moneybag:", f"**{balance}$**", Color.success)
+        await ctx.respond(embed=embed)
 
 
 def setup(bot):
