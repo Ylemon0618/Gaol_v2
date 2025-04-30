@@ -10,29 +10,15 @@ from discord import Interaction, ApplicationContext
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from pymongo.mongo_client import MongoClient
-
 from modules.make_embed import makeEmbed, Color
 from modules.messages.embeds import SongEmbed
 from modules.song_player import YTDLSource, add_to_queue, SongPlayer
 from modules.song_change.change_channel import MoveChannelView
+from modules.connect_db.custom_playlist import *
 
 load_dotenv()
 
-client = MongoClient(os.environ.get('MONGO_URI'))
-
-db = client["gaol"]
-custom_playlist = db["custom_playlist"]
-
 song_cnt = int(os.environ.get('PAGE_SIZE'))
-
-
-def insert_song(user_id: int, url: str, title: str):
-    return custom_playlist.find_one_and_update({"user_id": user_id}, {"$push": {"playlist": url, "title": title}})
-
-
-def delete_song(user_id: int, url: str, title: str):
-    return custom_playlist.find_one_and_update({"user_id": user_id}, {"$pull": {"playlist": url, "title": title}})
 
 
 def set_playlist_field(title: list, page: int, title_type: str = "field", selected: str = None):

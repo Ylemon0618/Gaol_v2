@@ -3,7 +3,7 @@ from .convert_file import *
 from .game_ui import *
 from .messages import *
 from .song_change import *
-from .check_balance import *
+from .connect_db import *
 from .make_embed import *
 from .song_custom_playlist import *
 from .song_player import *

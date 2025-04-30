@@ -1,15 +1,8 @@
-import os
-import random
-
-import discord
-from discord import Option, OptionChoice, ApplicationContext
+from discord import Option, OptionChoice
 from discord.ext import commands
-from dotenv import load_dotenv
 
-from modules.game_ui.coin_toss import coin_toss
-from modules.make_embed import makeEmbed, Color
 from modules.game_ui import *
-from modules.check_balance import *
+from modules.connect_db.balance import *
 
 load_dotenv()
 
@@ -96,6 +89,12 @@ class Game(commands.Cog):
 
         embed = makeEmbed(":moneybag: Balance | 잔고 :moneybag:", f"**{balance}$**", Color.success)
         await ctx.respond(embed=embed)
+
+    @game_commands.command(name="attendance", name_localizations={"ko": "출석"},
+                           description="Get reward through attendance check",
+                           description_localizations={"ko": "출석 체크를 통해 보상을 받습니다."})
+    async def attendance_(self, ctx: ApplicationContext):
+        pass
 
 
 def setup(bot):
