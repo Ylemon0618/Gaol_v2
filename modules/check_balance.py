@@ -26,3 +26,12 @@ def update_user_balance(user_id, amount):
         custom_playlist.insert_one({"user_id": user_id, "balance": amount})
 
     return custom_playlist.find_one({"user_id": user_id})["balance"]
+
+def set_user_balance(user_id, amount):
+    user = custom_playlist.find_one({"user_id": user_id})
+    if user:
+        custom_playlist.update_one({"user_id": user_id}, {"$set": {"balance": amount}})
+    else:
+        custom_playlist.insert_one({"user_id": user_id, "balance": amount})
+
+    return custom_playlist.find_one({"user_id": user_id})["balance"]
