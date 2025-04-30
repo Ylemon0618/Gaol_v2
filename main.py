@@ -1,9 +1,4 @@
-import os
 from abc import ABC
-
-import discord
-from discord.ext import commands
-from dotenv import load_dotenv
 
 from modules import *
 
@@ -48,9 +43,9 @@ async def eval_(ctx, *, code: str):
     try:
         for l in code.split("<br>"):
             if l.startswith("await "):
-                await eval(code[6:])
+                await eval(l[6:])
             else:
-                eval(code)
+                eval(l)
     except Exception as e:
         dm = await ctx.author.create_dm()
         await dm.send(e)
