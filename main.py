@@ -5,6 +5,8 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
+from modules import *
+
 load_dotenv()
 
 OWNERS = list(map(int, os.environ.get('OWNERS').split()))
@@ -13,7 +15,7 @@ intents = discord.Intents.all()
 
 class Bot(commands.Bot, ABC):
     def __init__(self):
-        super().__init__(intents=intents)
+        super().__init__(intents=intents, command_prefix="!", owner_ids=OWNERS)
 
         self.remove_command("help")
 
@@ -35,7 +37,22 @@ class Bot(commands.Bot, ABC):
         else:
             raise error
 
-
 bot = Bot()
+
+
+@bot.command(name="eval")
+async def eval_(ctx, *, code: str):
+    if ctx.author.id not in OWNERS:
+        return
+
+    try:
+        for l in code.split("<br>"):
+            if l.startswith("await "):
+                await eval(code[6:])
+            else:
+                eval(code)
+    except Exception as e:
+        dm = await ctx.author.create_dm()
+        await dm.send(e)
 
 bot.run(os.environ.get('TOKEN'))
