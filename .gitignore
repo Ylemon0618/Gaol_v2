@@ -1,5 +1,7 @@
 .venv/
 downloads/
 images/
+.idea/
+.github/
 
 .env
