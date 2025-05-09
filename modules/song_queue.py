@@ -67,7 +67,7 @@ class QueueMainSelect(discord.ui.Select):
         choice_num = int(self.values[0])
         choice = self.queue_listed[choice_num]
 
-        embed = makeEmbed(Title.selected, f"**{choice}**", Color.success)
+        embed = makeEmbed(Title.selected, f"**{choice.title}**", Color.success)
         await interaction.response.edit_message(embed=embed,
                                                 view=QueueSelectedView(self.queue, self.queue_listed,
                                                                        self.page * song_cnt + choice_num))
