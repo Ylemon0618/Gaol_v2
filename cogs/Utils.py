@@ -303,26 +303,26 @@ class Utils(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    file_commands = discord.SlashCommandGroup(name="utils", name_localizations={"ko": "유틸리티"},
+    utils_commands = discord.SlashCommandGroup(name="utils", name_localizations={"ko": "유틸리티"},
                                               description="Commands of utility",
                                               description_localizations={"ko": "각종 기능들을 사용할 수 있는 명령어"},
                                               guild_ids=guild_ids)
 
-    @file_commands.command(name="ping", name_localizations={"ko": "핑"},
+    @utils_commands.command(name="ping", name_localizations={"ko": "핑"},
                            description="Check the bot's response time",
                            description_localizations={"ko": "봇의 응답 시간을 확인합니다."})
     async def ping_(self, ctx: ApplicationContext):
         await ctx.respond(embed=makeEmbed(":ping_pong: Pong! :ping_pong:",
                                           f"{round(self.bot.latency * 1000)}ms", Color.success))
 
-    @file_commands.command(name="help", name_localizations={"ko": "도움"},
+    @utils_commands.command(name="help", name_localizations={"ko": "도움"},
                            description="Do you need some help? Use this command to get help!",
                            description_localizations={"ko": "도움이 필요하신가요? 이 명령어를 사용해 도움을 받으세요!"})
     async def help_(self, ctx: ApplicationContext):
         embed = HelpEmbed.choose_item
         await ctx.respond(embed=embed, view=HelpView(ctx.bot), ephemeral=True)
 
-    @file_commands.command(name="info", name_localizations={"ko": "정보"},
+    @utils_commands.command(name="info", name_localizations={"ko": "정보"},
                             description="Get the bot's information",
                             description_localizations={"ko": "봇의 정보를 확인합니다."})
     async def info_(self, ctx: ApplicationContext):
