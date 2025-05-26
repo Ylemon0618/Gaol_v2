@@ -59,13 +59,15 @@ class AttendanceRandomButton(discord.ui.Button):
 
 
 class AttendanceRandomChooseView(discord.ui.View):
-    def __init__(self, user_id, disabled=False, colors=[discord.ButtonStyle.gray] * 5):
+    def __init__(self, user_id, disabled=False, colors=[discord.ButtonStyle.gray] * 5, moneys=None):
         super().__init__(timeout=None)
 
         self.user_id = user_id
 
-        moneys = [100, 1000, 5000, 10000, 20000]
-        random.shuffle(moneys)
+        if not moneys:
+            moneys = [100, 1000, 5000, 10000, 20000]
+            random.shuffle(moneys)
+
         for idx in range(5):
             self.add_item(AttendanceRandomMoneyButton(user_id, moneys[idx], moneys, disabled, colors[idx], idx))
 
@@ -85,6 +87,8 @@ class AttendanceRandomMoneyButton(discord.ui.Button):
                 embed=makeEmbed(":warning: Error :warning:", "You are not the sender of this message.", Color.error),
                 ephemeral=True)
 
+        print(self.amount)
+
         new_balance = update_user_balance(self.user_id, self.amount)
 
         embed = makeEmbed(":moneybag: Random Money | 랜덤 출석 보상 :moneybag:", "", Color.success)
@@ -94,4 +98,4 @@ class AttendanceRandomMoneyButton(discord.ui.Button):
         colors = [discord.ButtonStyle.red] * 5
         colors[self.idx] = discord.ButtonStyle.green
         return await interaction.response.edit_message(embed=embed,
-                                                       view=AttendanceRandomChooseView(self.user_id, True, colors))
+                                                       view=AttendanceRandomChooseView(self.user_id, True, colors, self.moneys))
