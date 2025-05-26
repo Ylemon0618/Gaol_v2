@@ -72,7 +72,7 @@ class AttendanceRandomChooseView(discord.ui.View):
 
 class AttendanceRandomMoneyButton(discord.ui.Button):
     def __init__(self, user_id, amount, moneys, disabled, color, idx):
-        super().__init__(label=f"? $", style=color, disabled=disabled)
+        super().__init__(label=f"{amount} $" if disabled else "? $", style=color, disabled=disabled)
 
         self.user_id = user_id
         self.amount = amount
