@@ -304,20 +304,20 @@ class Utils(commands.Cog):
         self.bot = bot
 
     utils_commands = discord.SlashCommandGroup(name="utils", name_localizations={"ko": "유틸리티"},
-                                              description="Commands of utility",
-                                              description_localizations={"ko": "각종 기능들을 사용할 수 있는 명령어"},
-                                              guild_ids=guild_ids)
+                                               description="Commands of utility",
+                                               description_localizations={"ko": "각종 기능들을 사용할 수 있는 명령어"},
+                                               guild_ids=guild_ids)
 
     @utils_commands.command(name="ping", name_localizations={"ko": "핑"},
-                           description="Check the bot's response time",
-                           description_localizations={"ko": "봇의 응답 시간을 확인합니다."})
+                            description="Check the bot's response time",
+                            description_localizations={"ko": "봇의 응답 시간을 확인합니다."})
     async def ping_(self, ctx: ApplicationContext):
         await ctx.respond(embed=makeEmbed(":ping_pong: Pong! :ping_pong:",
                                           f"{round(self.bot.latency * 1000)}ms", Color.success))
 
     @utils_commands.command(name="help", name_localizations={"ko": "도움"},
-                           description="Do you need some help? Use this command to get help!",
-                           description_localizations={"ko": "도움이 필요하신가요? 이 명령어를 사용해 도움을 받으세요!"})
+                            description="Do you need some help? Use this command to get help!",
+                            description_localizations={"ko": "도움이 필요하신가요? 이 명령어를 사용해 도움을 받으세요!"})
     async def help_(self, ctx: ApplicationContext):
         embed = HelpEmbed.choose_item
         await ctx.respond(embed=embed, view=HelpView(ctx.bot), ephemeral=True)
