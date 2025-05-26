@@ -87,8 +87,6 @@ class AttendanceRandomMoneyButton(discord.ui.Button):
                 embed=makeEmbed(":warning: Error :warning:", "You are not the sender of this message.", Color.error),
                 ephemeral=True)
 
-        print(self.amount)
-
         new_balance = update_user_balance(self.user_id, self.amount)
 
         embed = makeEmbed(":moneybag: Random Money | 랜덤 출석 보상 :moneybag:", "", Color.success)
