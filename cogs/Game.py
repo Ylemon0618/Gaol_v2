@@ -1,8 +1,10 @@
 from discord import Option, OptionChoice
 from discord.ext import commands
+from datetime import datetime
 
 from modules.game_ui import *
 from modules.connect_db.balance import *
+from modules.connect_db.attendance import *
 
 load_dotenv()
 
@@ -74,9 +76,12 @@ class Game(commands.Cog):
                                      description="Choose a game to play",
                                      description_localizations={"ko": "플레이 할 게임을 선택 해 주세요."},
                                      choices=[
-                                         OptionChoice(name="Coin toss", value="coin", name_localizations={"ko": "동전 던지기"}),
-                                         OptionChoice(name="Blackjack", value="blackjack", name_localizations={"ko": "블랙잭"}),
-                                         OptionChoice(name="Slot machine", value="slot", name_localizations={"ko": "슬롯 머신"}),
+                                         OptionChoice(name="Coin toss", value="coin",
+                                                      name_localizations={"ko": "동전 던지기"}),
+                                         OptionChoice(name="Blackjack", value="blackjack",
+                                                      name_localizations={"ko": "블랙잭"}),
+                                         OptionChoice(name="Slot machine", value="slot",
+                                                      name_localizations={"ko": "슬롯 머신"}),
                                      ])):
         if option == "coin":
             await coin_toss(ctx)
@@ -94,7 +99,22 @@ class Game(commands.Cog):
                            description="Get reward through attendance check",
                            description_localizations={"ko": "출석 체크를 통해 보상을 받습니다."})
     async def attendance_(self, ctx: ApplicationContext):
-        pass
+        user = update_attendance(ctx.author.id)
+
+        if "error" in user:
+            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", user["error"], Color.error),
+                                     ephemeral=True)
+
+        embed = makeEmbed(":calendar: Attendance | 출석 :calendar:",
+                          f"**{ctx.author.mention}**님, 출석 체크를 완료했습니다!\n\n현재 출석 일수: **{user["streak"]}일**",
+                          Color.success)
+
+        streak = user["streak"]
+        if streak % 7 == 0:
+            update_user_balance(ctx.author.id, 10000)
+            embed.description += f"\n\n**출석 보상:** 10000$ (7일 연속 출석)"
+
+        await ctx.respond(embed=embed, view=AttendanceView(ctx.author.id))
 
 
 def setup(bot):
