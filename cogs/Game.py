@@ -1,6 +1,5 @@
 from discord import Option, OptionChoice
 from discord.ext import commands
-from datetime import datetime
 
 from modules.game_ui import *
 from modules.connect_db.balance import *

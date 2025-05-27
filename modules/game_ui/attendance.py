@@ -1,12 +1,9 @@
 import random
-from datetime import datetime
 
 import discord
-from discord import ApplicationContext
 
 from modules.make_embed import makeEmbed, Color
 from modules.connect_db.balance import *
-from modules.connect_db.attendance import *
 
 
 class AttendanceView(discord.ui.View):
@@ -95,5 +92,6 @@ class AttendanceRandomMoneyButton(discord.ui.Button):
 
         colors = [discord.ButtonStyle.red] * 5
         colors[self.idx] = discord.ButtonStyle.green
-        return await interaction.response.edit_message(embed=embed,
-                                                       view=AttendanceRandomChooseView(self.user_id, True, colors, self.moneys))
+        return await interaction.response.edit_message(
+            embed=embed,
+            view=AttendanceRandomChooseView(self.user_id, True, colors, self.moneys))
