@@ -92,7 +92,7 @@ class Game(commands.Cog):
         balance = get_user_balance(ctx.author.id)
 
         embed = makeEmbed(":moneybag: Balance | 잔고 :moneybag:", f"**{balance}$**", Color.success)
-        await ctx.respond(embed=embed)
+        return await ctx.respond(embed=embed)
 
     @game_commands.command(name="attendance", name_localizations={"ko": "출석"},
                            description="Get reward through attendance check",
@@ -113,7 +113,7 @@ class Game(commands.Cog):
             update_user_balance(ctx.author.id, 10000)
             embed.description += f"\n\n**출석 보상:** 10000$ (7일 연속 출석)"
 
-        await ctx.respond(embed=embed, view=AttendanceView(ctx.author.id))
+        return await ctx.respond(embed=embed, view=AttendanceView(ctx.author.id))
 
     @game_commands.command(name="mahjong", name_localizations={"ko": "마작"},
                            description="Train your mahjong",
