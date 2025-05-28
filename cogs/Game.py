@@ -119,8 +119,8 @@ class Game(commands.Cog):
                            description="Train your mahjong",
                            description_localizations={"ko": "마작을 연습합니다."})
     async def mahjong_(self, ctx: ApplicationContext):
-        load_dotenv("mahjong/.env")
-        await ctx.respond(os.environ.get('EMOJIS'))
+        load_dotenv("mahjong_files/.env")
+        emoji = os.environ.get('EMOJIS').split()
 
 
 def setup(bot):
