@@ -27,7 +27,7 @@ jobs:
           script: |
             cd ~/Gaol_v2
             git pull origin master
-            python3 -m venv venv
+            python3.12 -m venv venv
             source venv/bin/activate
             pip install -r requirements.txt
             pm2 restart gaolV2
