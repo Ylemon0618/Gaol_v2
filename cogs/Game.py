@@ -105,7 +105,7 @@ class Game(commands.Cog):
                                      ephemeral=True)
 
         embed = makeEmbed(":calendar: Attendance | 출석 :calendar:",
-                          f"**{ctx.author.mention}**님, 출석 체크를 완료했습니다!\n\n현재 출석 일수: **{user["streak"]}일**",
+                          f"**{ctx.author.mention}**님, 출석 체크를 완료했습니다!\n\n현재 출석 일수: **{user['streak']}일**",
                           Color.success)
 
         streak = user["streak"]
