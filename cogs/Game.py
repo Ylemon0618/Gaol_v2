@@ -1,3 +1,5 @@
+import mahjong.meld
+from mahjong import *
 from discord import Option, OptionChoice
 from discord.ext import commands
 
@@ -120,7 +122,16 @@ class Game(commands.Cog):
                            description_localizations={"ko": "마작을 연습합니다."})
     async def mahjong_(self, ctx: ApplicationContext):
         load_dotenv("mahjong_files/.env")
-        emoji = os.environ.get('EMOJIS').split()
+        emoji_raw = os.environ.get('EMOJIS').split()
+        emojis = []
+        for e in emoji_raw:
+            emojis += [discord.PartialEmoji(name=e, id=None)] * 4
+
+        mahjong_tiles = list(range(0, 136))
+        tehai = random.sample(mahjong_tiles, 14)
+        tehai.sort()
+
+        await ctx.respond(*[emojis[i] for i in tehai], sep=" ", ephemeral=True)
 
 
 def setup(bot):
