@@ -131,7 +131,7 @@ class Game(commands.Cog):
         tehai = random.sample(mahjong_tiles, 14)
         tehai.sort()
 
-        await ctx.respond(*[emojis[i] for i in tehai], ephemeral=True)
+        await ctx.respond(f"{[emojis[i] for i in tehai]}", ephemeral=True)
 
 
 def setup(bot):
