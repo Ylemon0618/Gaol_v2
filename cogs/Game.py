@@ -125,13 +125,13 @@ class Game(commands.Cog):
         emoji_raw = os.environ.get('EMOJIS').split()
         emojis = []
         for e in emoji_raw:
-            emojis += [discord.PartialEmoji(name=e, id=None)] * 4
+            emojis += [e] * 4
 
         mahjong_tiles = list(range(0, 136))
         tehai = random.sample(mahjong_tiles, 14)
         tehai.sort()
 
-        await ctx.respond(f"{[emojis[i] for i in tehai]}", ephemeral=True)
+        await ctx.respond("".join([emojis[i] for i in tehai]))
 
 
 def setup(bot):
