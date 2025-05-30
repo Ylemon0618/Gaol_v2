@@ -312,8 +312,15 @@ class Utils(commands.Cog):
                             description="Check the bot's response time",
                             description_localizations={"ko": "봇의 응답 시간을 확인합니다."})
     async def ping_(self, ctx: ApplicationContext):
-        await ctx.respond(embed=makeEmbed(":ping_pong: Pong! :ping_pong:",
-                                          f"{round(self.bot.latency * 1000)}ms", Color.success))
+        container = discord.ui.Container()
+        container.add_text(":ping_pong: Pong! :ping_pong:")
+        container.add_separator()
+        container.add_text(f"{round(self.bot.latency * 1000)}ms")
+
+        view = discord.ui.View(timeout=None)
+        view.add_item(container)
+
+        await ctx.respond(view=view)
 
     @utils_commands.command(name="help", name_localizations={"ko": "도움"},
                             description="Do you need some help? Use this command to get help!",
