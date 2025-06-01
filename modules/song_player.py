@@ -363,8 +363,7 @@ async def add_to_queue(player: SongPlayer, source: YTDLSource) -> None:
         await edit_queue_message(player, player.current)
 
     if player.now_playing:
-        await player.now_playing.edit(embed=now_playing_embed(player.current, player.queue),
-                                      view=NowPlaying(player.ctx, player.queue, player))
+        await player.now_playing.edit(view=NowPlaying(player.ctx, player.queue, player, source))
 
 
 async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
