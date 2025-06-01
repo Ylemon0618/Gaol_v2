@@ -25,3 +25,10 @@ def makeEmbed(title: str, description: str, color: int, *fields: list[Field]):
             embed.add_field(name=field.name, value=field.value, inline=field.inline)
 
     return embed
+
+
+def makeView(container: discord.ui.Container):
+    view = discord.ui.View(timeout=None)
+    view.add_item(container)
+
+    return view

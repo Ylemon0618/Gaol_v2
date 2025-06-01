@@ -8,7 +8,7 @@ from discord import ApplicationContext
 from discord.ext import commands
 from yt_dlp import YoutubeDL
 
-from modules.make_embed import makeEmbed, Color
+from modules.make_embed import *
 from modules.song_queue import QueueMainView, set_queue_field
 
 ytdl_format_options = {
@@ -70,24 +70,18 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 data = data['entries'][0]
 
             if send_message:
-                embed = makeEmbed(":cd: Play | 재생 :cd:", f"[**{data['title']}**](<{data['webpage_url']}>)",
-                                  Color.success)
-
                 channel = data['uploader']
                 if 'channel_is_verified' in data:
                     channel += "<:verified:1337271571043192893>"
                 if data['uploader_id'] and data['uploader_url']:
                     channel += f" ([{data['uploader_id']}](<{data['uploader_url']}>))"
 
-                embed.add_field(name="Channel", value=channel, inline=True)
-                embed.add_field(name="Duration", value=data['duration_string'], inline=True)
+                container = discord.ui.Container()
+                container.add_section(discord.ui.TextDisplay(f"## Play | 재생\n[**{data['title']}**](<{data['webpage_url']}>)"), accessory=discord.ui.Thumbnail(data['thumbnail']))
+                container.add_separator()
+                container.add_text(f"### Channel\n{channel}\n### Duration\n{data['duration_string']}")
 
-                embed.set_thumbnail(url=data['thumbnail'])
-
-                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-
-                await ctx.respond(embed=embed)
-
+                await ctx.respond(view=makeView(container))
             if download:
                 source = ytdl.prepare_filename(data)
             else:
@@ -104,6 +98,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             return cls(discord.FFmpegPCMAudio(source), data=data, requester=requester)
         except Exception as e:
             await ctx.respond(embed=makeEmbed(":warning: Error :warning:", f"{e}", Color.error), ephemeral=True)
+            raise e
 
     @classmethod
     async def regather_stream(cls, data, requester: discord.Member, *, loop):
@@ -116,22 +111,24 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 class NowPlaying(discord.ui.View):
-    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player, source):
         super().__init__(timeout=None)
 
+        container = now_playing_container(source, queue)
+
         if ctx.voice_client.is_paused():
-            self.add_item(ResumeButton(ctx, queue, player))
+            container.add_item(ResumeButton(ctx, queue, player, source))
         else:
-            self.add_item(PauseButton(ctx, queue, player))
-
+            container.add_item(PauseButton(ctx, queue, player, source))
         if queue.qsize() >= 1:
-            self.add_item(NextButton(ctx))
+            container.add_item(NextButton(ctx))
+        container.add_item(StopButton(ctx, queue, player))
 
-        self.add_item(StopButton(ctx, queue, player))
+        self.add_item(container)
 
 
 class PauseButton(discord.ui.Button):
-    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player, source):
         super().__init__(
             emoji="⏸️",
             custom_id="pause",
@@ -141,15 +138,16 @@ class PauseButton(discord.ui.Button):
         self.ctx = ctx
         self.queue = queue
         self.player = player
+        self.source = source
 
     async def callback(self, interaction: discord.Interaction):
         self.ctx.voice_client.pause()
 
-        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue, self.player))
+        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue, self.player, self.source))
 
 
 class ResumeButton(discord.ui.Button):
-    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player):
+    def __init__(self, ctx: ApplicationContext, queue: asyncio.Queue, player, source):
         super().__init__(
             emoji="▶️",
             custom_id="resume",
@@ -159,11 +157,12 @@ class ResumeButton(discord.ui.Button):
         self.ctx = ctx
         self.queue = queue
         self.player = player
+        self.source = source
 
     async def callback(self, interaction: discord.Interaction):
         self.ctx.voice_client.resume()
 
-        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue, self.player))
+        await interaction.response.edit_message(view=NowPlaying(self.ctx, self.queue, self.player, self.source))
 
 
 class NextButton(discord.ui.Button):
@@ -198,27 +197,22 @@ class StopButton(discord.ui.Button):
         await cleanup(self.ctx.guild, self.player)
 
 
-def now_playing_embed(source: YTDLSource, queue: asyncio.Queue) -> discord.Embed:
-    embed = makeEmbed(":musical_note: **Now Playing** :musical_note:",
-                      f"[**{source.title}**](<{source.url}>)", Color.success)
-
+def now_playing_container(source: YTDLSource, queue: asyncio.Queue) -> discord.ui.Container:
     channel = source.channel
     if source.channel_is_verified:
         channel += "<:verified:1337271571043192893>"
     if source.uploader_id and source.uploader_url:
         channel += f" ([{source.uploader_id}](<{source.uploader_url}>))"
 
-    embed.add_field(name="Channel", value=channel, inline=True)
-    embed.add_field(name="Duration", value=source.duration_string, inline=True)
-
+    container = discord.ui.Container()
+    container.add_section(discord.ui.TextDisplay(f"## Now Playing\n[**{source.title}**](<{source.url}>)"), accessory=discord.ui.Thumbnail(source.thumbnail))
+    container.add_separator()
+    container.add_text(f"### Channel\n{channel}\n### Duration\n{source.duration_string}")
     if queue.qsize() >= 1:
-        embed.add_field(name="Next Song", value=f"[**{queue._queue[0].title}**](<{queue._queue[0].url}>)", inline=False)
+        container.add_text(f"### Next Song\n[**{queue._queue[0].title}**](<{queue._queue[0].url}>)")
+    container.add_text(f"-# Requested by {source.requester.display_name}")
 
-    embed.set_thumbnail(url=source.thumbnail)
-
-    embed.set_footer(text=source.requester.display_name, icon_url=source.requester.display_avatar.url)
-
-    return embed
+    return container
 
 
 class SongPlayer(commands.Cog):
@@ -308,8 +302,7 @@ class SongPlayer(commands.Cog):
             try:
                 self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-                self.now_playing = await self._channel.send(embed=now_playing_embed(source, self.queue),
-                                                            view=NowPlaying(self.ctx, self.queue, self.players))
+                self.now_playing = await self._channel.send(view=NowPlaying(self.ctx, self.queue, self.players, source))
             except AttributeError:
                 pass
 
