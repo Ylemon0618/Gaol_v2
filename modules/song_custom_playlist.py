@@ -10,7 +10,7 @@ from discord import Interaction, ApplicationContext
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from modules.make_embed import makeEmbed, Color
+from modules.make_embed import *
 from modules.messages.embeds import SongEmbed
 from modules.song_player import YTDLSource, add_to_queue, SongPlayer
 from modules.song_change.change_channel import MoveChannelView
@@ -67,7 +67,9 @@ async def join(ctx: ApplicationContext):
         except asyncio.TimeoutError:
             return await ctx.respond(embed=SongEmbed.Error.timeout)
 
-    await ctx.respond(embed=makeEmbed(":musical_note: Joined :musical_note:", channel.mention, Color.success))
+    container = discord.ui.Container()
+    container.add_text(f"## Joined\n\n{channel.mention}")
+    return await ctx.respond(view=makeView(container))
 
 
 class SongCustomPlaylistView(discord.ui.View):

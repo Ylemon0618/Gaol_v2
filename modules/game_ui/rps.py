@@ -21,6 +21,8 @@ def check_winner(choice1, choice2):
             return 2
         else:
             return 1
+    return None
+
 
 class RPSView(discord.ui.View):
     def __init__(self):

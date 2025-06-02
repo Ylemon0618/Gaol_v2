@@ -1,11 +1,11 @@
 import os
+from dotenv import load_dotenv
 import json
 from copy import deepcopy
 
 import discord
 from discord import ApplicationContext, Interaction
 from discord.ext import commands
-from dotenv import load_dotenv
 
 from modules.make_embed import makeEmbed, Color
 from modules.messages.embeds import HelpEmbed

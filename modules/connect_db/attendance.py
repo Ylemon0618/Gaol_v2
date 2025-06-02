@@ -1,7 +1,6 @@
 import os
-from datetime import datetime, timedelta
-
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 from pymongo.mongo_client import MongoClient
 
 load_dotenv()
