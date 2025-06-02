@@ -8,7 +8,7 @@ from discord import Option, ApplicationContext
 from discord.ext import commands
 from pytube import Playlist
 
-from modules.make_embed import makeEmbed, Color
+from modules.make_embed import *
 from modules.song_player import YTDLSource, SongPlayer, cleanup, add_to_queue, edit_queue_message
 from modules.song_change import MoveChannelView, ResetQueueView, ChangeRepeatView
 from modules.song_queue import QueueMainView, set_queue_field
@@ -66,7 +66,9 @@ class Song(commands.Cog):
             except asyncio.TimeoutError:
                 return await ctx.respond(embed=SongEmbed.Error.timeout)
 
-        await ctx.respond(embed=makeEmbed(":musical_note: Joined :musical_note:", channel.mention, Color.success))
+        container = discord.ui.Container()
+        container.add_text(f"## Joined\n\n{channel.mention}")
+        return await ctx.respond(view=makeView(container))
 
     # 음챗 나가기
     # Param: ctx

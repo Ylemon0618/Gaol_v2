@@ -46,7 +46,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.channel_is_verified = data.get('channel_is_verified')
         self.uploader_id = data.get('uploader_id')
         self.uploader_url = data.get('uploader_url')
-
         self.requester = requester
 
     def __getitem__(self, item: str):
