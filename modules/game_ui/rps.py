@@ -2,6 +2,8 @@ import discord
 
 from modules.make_embed import makeEmbed, Color
 
+emoji = {"rock": "👊", "paper": "✋", "scissors": "✌️"}
+
 
 def check_winner(choice1, choice2):
     if choice1 == choice2:
@@ -25,13 +27,13 @@ def check_winner(choice1, choice2):
 
 
 class RPSView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, choice, user, channel):
         super().__init__(timeout=None)
 
-        self.add_item(RPSSelect())
+        self.add_item(RPSSelect(choice, user, channel))
 
 class RPSSelect(discord.ui.Select):
-    def __init__(self):
+    def __init__(self, choice, user, channel):
         super().__init__(
             placeholder="Choose a hand",
             options=[
@@ -41,25 +43,29 @@ class RPSSelect(discord.ui.Select):
             ]
         )
 
+        self.choice = choice
+        self.user = user
+        self.channel = channel
+
     async def callback(self, interaction: discord.Interaction):
         choice2 = self.values[0]
 
         await interaction.response.edit_message(embed=makeEmbed(":fist: :raised_hand: :v:",
-                                                                f"{ctx.user.mention}님이 가위바위보를 신청했습니다!\n\n나의 선택: {emoji.get(choice2)}",
+                                                                f"{self.user.mention}님이 가위바위보를 신청했습니다!\n\n나의 선택: {emoji.get(choice2)}",
                                                                 Color.success),
                                                 view=None)
 
-        if not check_winner(choice, choice2):
+        if not check_winner(self.choice, choice2):
             result = makeEmbed(":fist: :raised_hand: :v:",
-                               f"무승부!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
+                               f"무승부!!\n\n{self.user.mention}: {emoji.get(self.choice)}\n{interaction.user.mention}: {emoji.get(choice2)}",
                                Color.success)
-        elif check_winner(choice, choice2) == 1:
+        elif check_winner(self.choice, choice2) == 1:
             result = makeEmbed(":fist: :raised_hand: :v:",
-                               f"{ctx.author.mention} 승리!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
+                               f"{self.user.mention} 승리!!\n\n{self.user.mention}: {emoji.get(self.choice)}\n{interaction.user.mention}: {emoji.get(choice2)}",
                                Color.success)
         else:
             result = makeEmbed(":fist: :raised_hand: :v:",
-                               f"{user.mention} 승리!!\n\n{ctx.author.mention}: {emoji.get(choice)}\n{user.mention}: {emoji.get(choice2)}",
+                               f"{interaction.user.mention} 승리!!\n\n{self.user.mention}: {emoji.get(self.choice)}\n{interaction.user.mention}: {emoji.get(choice2)}",
                                Color.success)
 
-        await ctx.channel.send(f"{ctx.author.mention} {user.mention}", embed=result)
+        await self.channel.send(f"{self.user.mention} {interaction.user.mention}", embed=result)
