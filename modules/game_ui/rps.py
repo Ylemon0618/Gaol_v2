@@ -32,6 +32,7 @@ class RPSView(discord.ui.View):
 
         self.add_item(RPSSelect(choice, user, channel))
 
+
 class RPSSelect(discord.ui.Select):
     def __init__(self, choice, user, channel):
         super().__init__(
