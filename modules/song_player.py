@@ -1,6 +1,8 @@
 import asyncio
 import shutil
 from functools import partial
+import os
+from dotenv import load_dotenv
 
 import discord
 from async_timeout import timeout
@@ -10,6 +12,9 @@ from yt_dlp import YoutubeDL
 
 from modules.make_embed import *
 from modules.song_queue import QueueMainView, set_queue_field
+
+load_dotenv()
+verified_emoji = os.environ.get('VERIFIED_EMOJI')
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -71,7 +76,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             if send_message:
                 channel = data['uploader']
                 if 'channel_is_verified' in data:
-                    channel += "<:verified:1337271571043192893>"
+                    channel += verified_emoji
                 if data['uploader_id'] and data['uploader_url']:
                     channel += f" ([{data['uploader_id']}](<{data['uploader_url']}>))"
 
@@ -199,7 +204,7 @@ class StopButton(discord.ui.Button):
 def now_playing_container(source: YTDLSource, queue: asyncio.Queue) -> discord.ui.Container:
     channel = source.channel
     if source.channel_is_verified:
-        channel += "<:verified:1337271571043192893>"
+        channel += verified_emoji
     if source.uploader_id and source.uploader_url:
         channel += f" ([{source.uploader_id}](<{source.uploader_url}>))"
 
