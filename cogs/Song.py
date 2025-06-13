@@ -284,7 +284,7 @@ class Song(commands.Cog):
                                         view=None if player.queue.empty() else
                                         QueueMainView(player.queue, queue_list, 0))
 
-            player.queue_message[ctx.channel.id] = message
+            player.queue_message[ctx.guild.id][ctx.channel.id] = message.id
             return message
         except:
             return None

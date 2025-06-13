@@ -239,15 +239,23 @@ class SongPlayer(commands.Cog):
         self.repeat_count = 0
         self.first = None
 
-        self.queue_message = {}
+        self.queue_message = {}  # {guild_id: {channel_id: message_id}}
 
         self.players = players
 
         ctx.bot.loop.create_task(self.player_loop())
 
     async def terminate(self):
-        for message in self.queue_message.values():
-            await message.delete()
+        for guild_id, guild_dict in list(self.queue_message.items()):
+            for channel_id, message_id in guild_dict.items():
+                try:
+                    guild = self.bot.get_guild(guild_id)
+                    channel = guild.get_channel(channel_id)
+                    message = await channel.fetch_message(message_id)
+
+                    await message.delete()
+                except AttributeError:
+                    continue
 
         return self.bot.loop.create_task(cleanup(self._guild, self.players))
 
@@ -384,16 +392,21 @@ async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
     if not player.queue.empty():
         embed = set_queue_field(embed, player.queue_list, 0)
 
-    for key, message in list(player.queue_message.items()):
-        try:
-            await message.edit(embed=embed,
-                               view=None if player.queue.empty() else
-                               QueueMainView(player.queue, player.queue_list, 0))
-        except discord.errors.InvalidArgument:
-            del player.queue_message[key]
-        except discord.errors.HTTPException as e:
-            if "Invalid Webhook Token" in str(e):
-                new_message = await player.ctx.send(embed=embed,
-                                                    view=None if player.queue.empty() else
-                                                    QueueMainView(player.queue, player.queue_list, 0))
-                player.queue_message[key] = new_message
+    for guild_id, guild_dict in list(player.queue_message.items()):
+        for channel_id, message_id in guild_dict.items():
+            guild = player.bot.get_guild(guild_id)
+            channel = guild.get_channel(channel_id)
+            message = await channel.fetch_message(message_id)
+
+            try:
+                await message.edit(embed=embed,
+                                   view=None if player.queue.empty() else
+                                   QueueMainView(player.queue, player.queue_list, 0))
+            except discord.errors.InvalidArgument:
+                del player.queue_message[guild_id][channel_id]
+            except discord.errors.HTTPException as e:
+                if "Invalid Webhook Token" in str(e):
+                    new_message = await player.ctx.send(embed=embed,
+                                                        view=None if player.queue.empty() else
+                                                        QueueMainView(player.queue, player.queue_list, 0))
+                    player.queue_message[guild_id][channel_id] = new_message
