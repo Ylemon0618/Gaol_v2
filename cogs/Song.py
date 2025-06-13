@@ -54,7 +54,7 @@ class Song(commands.Cog):
 
         if vc:
             if vc.channel.id == channel.id:
-                return
+                return None
 
             try:
                 return await ctx.respond(embed=SongEmbed.UI.convert, view=MoveChannelView(vc, channel))
@@ -143,7 +143,8 @@ class Song(commands.Cog):
 
             songs = pl.video_urls if len(pl.video_urls) <= 20 else pl.video_urls[:20]
             if not pl.video_urls:
-                source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop, download=True)
+                source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop,
+                                                        download=True)
                 return await add_to_queue(player, source)
 
             downloading = await ctx.respond(embed=makeEmbed(":arrow_down: Downloading :arrow_down:",
@@ -152,7 +153,8 @@ class Song(commands.Cog):
             thumbnail = None
             duration = 0
             for url in songs:
-                source = await YTDLSource.create_source(ctx, url=url, requester=ctx.author, loop=self.bot.loop, download=True,
+                source = await YTDLSource.create_source(ctx, url=url, requester=ctx.author, loop=self.bot.loop,
+                                                        download=True,
                                                         send_message=False)
                 await add_to_queue(player, source)
 
@@ -174,11 +176,12 @@ class Song(commands.Cog):
 
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
 
-            await downloading.edit(embed=embed)
+            return await downloading.edit(embed=embed)
         else:
-            source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop, download=True)
+            source = await YTDLSource.create_source(ctx, url=song, requester=ctx.author, loop=self.bot.loop,
+                                                    download=True)
 
-            await add_to_queue(player, source)
+            return await add_to_queue(player, source)
 
     # 재생 일시정지
     # Param: ctx
@@ -191,10 +194,10 @@ class Song(commands.Cog):
         if not vc or not vc.is_playing():
             return await ctx.respond(embed=SongEmbed.Error.not_playing)
         elif vc.is_paused():
-            return
+            return None
 
         vc.pause()
-        await ctx.respond(embed=SongEmbed.Success.pause)
+        return await ctx.respond(embed=SongEmbed.Success.pause)
 
     # 재생 재개
     # Param: ctx
@@ -207,10 +210,10 @@ class Song(commands.Cog):
         if not vc or not vc.is_connected():
             return await ctx.respond(embed=SongEmbed.Error.not_paused)
         elif not vc.is_paused():
-            return
+            return None
 
         vc.resume()
-        await ctx.respond(embed=SongEmbed.Success.resume)
+        return await ctx.respond(embed=SongEmbed.Success.resume)
 
     # 노래 스킵
     # Param: ctx
@@ -224,10 +227,10 @@ class Song(commands.Cog):
             return await ctx.respond(embed=SongEmbed.Error.not_playing)
 
         if not vc.is_playing() and not vc.is_paused():
-            return
+            return None
 
         vc.stop()
-        await ctx.respond(embed=SongEmbed.Success.skip)
+        return await ctx.respond(embed=SongEmbed.Success.skip)
 
     # 노래 중지
     # Param: ctx
@@ -242,7 +245,7 @@ class Song(commands.Cog):
 
         await cleanup(ctx.guild, self.players)
 
-        await ctx.respond(embed=SongEmbed.Success.stop)
+        return await ctx.respond(embed=SongEmbed.Success.stop)
 
     # 대기열 확인/편집
     # Param: ctx
@@ -273,14 +276,18 @@ class Song(commands.Cog):
         if not player.queue.empty():
             embed = set_queue_field(embed, queue_list, 0)
 
-        message = await ctx.respond(embed=embed,
-                                    view=None if player.queue.empty() else
-                                    QueueMainView(player.queue, queue_list, 0))
+        try:
+            if ctx.channel.id in player.queue_message:
+                await player.queue_message[ctx.channel.id].delete_original_response()
 
-        if ctx.channel.id in player.queue_message:
-            await player.queue_message[ctx.channel.id].delete_original_response()
+            message = await ctx.respond(embed=embed,
+                                        view=None if player.queue.empty() else
+                                        QueueMainView(player.queue, queue_list, 0))
 
-        player.queue_message[ctx.channel.id] = message
+            player.queue_message[ctx.channel.id] = message
+            return message
+        except:
+            return None
 
     # 대기열 반복
     # Param: ctx, 횟수
@@ -333,6 +340,8 @@ class Song(commands.Cog):
         if player.queue_message:
             await edit_queue_message(player, player.current)
 
+        return None
+
     # 반복 중지
     # Param: ctx
     @song_commands.command(name="stop_repeat", name_localizations={"ko": "반복중지"},
@@ -354,7 +363,7 @@ class Song(commands.Cog):
         player.first = None
         player.queue_list = list(player.queue._queue)
 
-        await ctx.respond(embed=SongEmbed.Success.stop_repeat)
+        return await ctx.respond(embed=SongEmbed.Success.stop_repeat)
 
     # 커스텀 플레이리스트
     # Param: ctx
@@ -362,9 +371,10 @@ class Song(commands.Cog):
                            description="Manage custom playlist",
                            description_localizations={"ko": "커스텀 플레이리스트를 관리합니다."})
     async def playlist_(self, ctx: ApplicationContext):
-        await ctx.respond(embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
-                                          "Manage custom playlist.\n커스텀 플레이리스트를 관리합니다.", Color.success),
-                          view=SongCustomPlaylistView(ctx, self.bot, self.players, ctx.author.id), ephemeral=True)
+        return await ctx.respond(embed=makeEmbed(":cd: Playlist | 플레이리스트 :cd:",
+                                                 "Manage custom playlist.\n커스텀 플레이리스트를 관리합니다.", Color.success),
+                                 view=SongCustomPlaylistView(ctx, self.bot, self.players, ctx.author.id),
+                                 ephemeral=True)
 
 
 def setup(bot):
