@@ -314,6 +314,7 @@ class SongPlayer(commands.Cog):
             try:
                 self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
+                print("send now_playing")
                 self.now_playing = await self._channel.send(view=NowPlaying(self.ctx, self.queue, self.players, source))
             except AttributeError:
                 pass
@@ -375,7 +376,7 @@ async def add_to_queue(player: SongPlayer, source: YTDLSource) -> None:
         await edit_queue_message(player, player.current)
 
     if player.now_playing:
-        await player.now_playing.edit(view=NowPlaying(player.ctx, player.queue, player, source))
+        await player.now_playing.edit(view=NowPlaying(player.ctx, player.queue, player, player.current))
 
 
 async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
