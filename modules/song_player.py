@@ -314,7 +314,6 @@ class SongPlayer(commands.Cog):
             try:
                 self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-                print("send now_playing")
                 self.now_playing = await self._channel.send(view=NowPlaying(self.ctx, self.queue, self.players, source))
             except AttributeError:
                 pass
@@ -395,9 +394,13 @@ async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
 
     for guild_id, guild_dict in list(player.queue_message.items()):
         for channel_id, message_id in guild_dict.items():
-            guild = player.bot.get_guild(guild_id)
-            channel = guild.get_channel(channel_id)
-            message = await channel.fetch_message(message_id)
+            try:
+                guild = player.bot.get_guild(guild_id)
+                channel = guild.get_channel(channel_id)
+                message = await channel.fetch_message(message_id)
+            except (discord.errors.NotFound, discord.errors.Forbidden):
+                del player.queue_message[guild_id][channel_id]
+                continue
 
             try:
                 await message.edit(embed=embed,
@@ -405,9 +408,8 @@ async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
                                    QueueMainView(player.queue, player.queue_list, 0))
             except discord.errors.InvalidArgument:
                 del player.queue_message[guild_id][channel_id]
-            except discord.errors.HTTPException as e:
-                if "Invalid Webhook Token" in str(e):
-                    new_message = await player.ctx.send(embed=embed,
-                                                        view=None if player.queue.empty() else
-                                                        QueueMainView(player.queue, player.queue_list, 0))
-                    player.queue_message[guild_id][channel_id] = new_message
+            except discord.errors.HTTPException:
+                new_message = await player.ctx.send(embed=embed,
+                                                    view=None if player.queue.empty() else
+                                                    QueueMainView(player.queue, player.queue_list, 0))
+                player.queue_message[guild_id][channel_id] = new_message

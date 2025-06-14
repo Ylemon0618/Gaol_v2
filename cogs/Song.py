@@ -254,7 +254,6 @@ class Song(commands.Cog):
                            description_localizations={"ko": "대기열을 확인 및 편집합니다."})
     async def queue_(self, ctx: ApplicationContext):
         vc = ctx.voice_client
-
         if not vc or not vc.is_playing():
             return await ctx.respond(embed=SongEmbed.Error.not_playing)
 
@@ -276,18 +275,21 @@ class Song(commands.Cog):
         if not player.queue.empty():
             embed = set_queue_field(embed, queue_list, 0)
 
-        try:
-            if ctx.channel.id in player.queue_message:
-                await player.queue_message[ctx.channel.id].delete_original_response()
+        if ctx.guild.id not in player.queue_message:
+            player.queue_message[ctx.guild.id] = {}
 
-            message = await ctx.respond(embed=embed,
-                                        view=None if player.queue.empty() else
-                                        QueueMainView(player.queue, queue_list, 0))
+        if ctx.channel.id in player.queue_message[ctx.guild.id]:
+            message_id = player.queue_message[ctx.guild.id][ctx.channel.id]
+            message = await ctx.channel.fetch_message(message_id)
+            await message.delete()
 
-            player.queue_message[ctx.guild.id][ctx.channel.id] = message.id
-            return message
-        except:
-            return None
+        await ctx.delete()
+        message = await ctx.send(embed=embed,
+                                 view=None if player.queue.empty() else
+                                 QueueMainView(player.queue, queue_list, 0))
+        player.queue_message[ctx.guild.id][ctx.channel.id] = message.id
+
+        return message
 
     # 대기열 반복
     # Param: ctx, 횟수
