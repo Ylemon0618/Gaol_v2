@@ -22,31 +22,32 @@ class Title:
 
 
 class QueueMainView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list, page: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, current, page: int):
         super().__init__(timeout=None)
 
         self.queue = queue
         self.queue_listed = queue_listed
+        self.current = current
         self.page = page
 
-        self.add_item(QueueMainSelect(queue, queue_listed, page))
+        self.add_item(QueueMainSelect(queue, queue_listed, current, page))
 
         min_page = 0
         max_page = (len(queue_listed) - 1) // song_cnt
 
         if page == min_page:
-            self.add_item(QueueMainPagePrevButton(queue, queue_listed, page, True))
+            self.add_item(QueueMainPagePrevButton(queue, queue_listed, current, page, True))
         else:
-            self.add_item(QueueMainPagePrevButton(queue, queue_listed, page))
+            self.add_item(QueueMainPagePrevButton(queue, queue_listed, current, page))
 
         if page == max_page:
-            self.add_item(QueueMainPageNextButton(queue, queue_listed, page, True))
+            self.add_item(QueueMainPageNextButton(queue, queue_listed, current, page, True))
         else:
-            self.add_item(QueueMainPageNextButton(queue, queue_listed, page))
+            self.add_item(QueueMainPageNextButton(queue, queue_listed, current, page))
 
 
 class QueueMainSelect(discord.ui.Select):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list, page: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, current, page: int):
         options = []
         for idx in range(page * song_cnt, page * song_cnt + song_cnt):
             if idx >= len(queue_listed):
@@ -61,6 +62,7 @@ class QueueMainSelect(discord.ui.Select):
 
         self.queue = queue
         self.queue_listed = queue_listed
+        self.current = current
         self.page = page
 
     async def callback(self, interaction: Interaction):
@@ -69,7 +71,7 @@ class QueueMainSelect(discord.ui.Select):
 
         embed = makeEmbed(Title.selected, f"**{choice.title}**", Color.success)
         await interaction.response.edit_message(embed=embed,
-                                                view=QueueSelectedView(self.queue, self.queue_listed,
+                                                view=QueueSelectedView(self.queue, self.queue_listed, self.current,
                                                                        self.page * song_cnt + choice_num))
 
 
@@ -84,7 +86,7 @@ def set_queue_field(embed: discord.Embed, queue_listed: list, page: int):
 
 
 class QueueMainPageNextButton(discord.ui.Button):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list, page: int, disabled=False):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, current, page: int, disabled=False):
         super().__init__(
             label="Next",
             emoji="➡️",
@@ -95,20 +97,21 @@ class QueueMainPageNextButton(discord.ui.Button):
 
         self.queue = queue
         self.queue_listed = queue_listed
+        self.current = current
         self.page = page
 
     async def callback(self, interaction: Interaction):
         self.page += 1
 
-        embed = set_queue_field(makeEmbed(Title.normal, interaction.message.embeds[0].description, Color.success),
+        embed = set_queue_field(makeEmbed(Title.normal, f"**Now Playing**\n> {self.current.title}", Color.success),
                                 self.queue_listed, self.page)
 
         await interaction.response.edit_message(embed=embed,
-                                                view=QueueMainView(self.queue, self.queue_listed, self.page))
+                                                view=QueueMainView(self.queue, self.queue_listed, self.current, self.page))
 
 
 class QueueMainPagePrevButton(discord.ui.Button):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list, page: int, disabled=False):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, current, page: int, disabled=False):
         super().__init__(
             label="Prev",
             emoji="⬅️",
@@ -119,24 +122,26 @@ class QueueMainPagePrevButton(discord.ui.Button):
 
         self.queue = queue
         self.queue_listed = queue_listed
+        self.current = current
         self.page = page
 
     async def callback(self, interaction: Interaction):
         self.page -= 1
 
-        embed = set_queue_field(makeEmbed(Title.normal, interaction.message.embeds[0].description, Color.success),
+        embed = set_queue_field(makeEmbed(Title.normal, f"**Now Playing**\n> {self.current.title}", Color.success),
                                 self.queue_listed, self.page)
 
         await interaction.response.edit_message(embed=embed,
-                                                view=QueueMainView(self.queue, self.queue_listed, self.page))
+                                                view=QueueMainView(self.queue, self.queue_listed, self.current, self.page))
 
 
 class QueueSelectedView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list, selected: int):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, current, selected: int):
         super().__init__(timeout=None)
 
         self.queue = queue
         self.queue_listed = queue_listed
+        self.current = current
         self.selected = selected
         self.title = self.queue_listed[selected].title
 
@@ -162,7 +167,8 @@ class QueueSelectedView(discord.ui.View):
         except Exception as e:
             embed = makeEmbed(Title.error, f"{e}", Color.error)
 
-        await interaction.response.edit_message(embed=embed, view=QueueBackToMainView(self.queue, self.queue_listed))
+        await interaction.response.edit_message(embed=embed,
+                                                view=QueueBackToMainView(self.queue, self.queue_listed, self.current))
 
     @discord.ui.button(
         label="취소",
@@ -173,15 +179,17 @@ class QueueSelectedView(discord.ui.View):
         embed = set_queue_field(makeEmbed(Title.back_to_main, "", Color.success),
                                 self.queue_listed, 0)
 
-        await interaction.response.edit_message(embed=embed, view=QueueMainView(self.queue, self.queue_listed, 0))
+        await interaction.response.edit_message(embed=embed,
+                                                view=QueueMainView(self.queue, self.queue_listed, self.current, 0))
 
 
 class QueueBackToMainView(discord.ui.View):
-    def __init__(self, queue: asyncio.Queue, queue_listed: list):
+    def __init__(self, queue: asyncio.Queue, queue_listed: list, current):
         super().__init__(timeout=None)
 
         self.queue = queue
         self.queue_listed = queue_listed
+        self.current = current
 
     @discord.ui.button(
         label="대기열로 돌아가기",
@@ -192,4 +200,5 @@ class QueueBackToMainView(discord.ui.View):
         embed = set_queue_field(makeEmbed(Title.back_to_main, "", Color.success),
                                 self.queue_listed, 0)
 
-        await interaction.response.edit_message(embed=embed, view=QueueMainView(self.queue, self.queue_listed, 0))
+        await interaction.response.edit_message(embed=embed,
+                                                view=QueueMainView(self.queue, self.queue_listed, self.current, 0))

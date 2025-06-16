@@ -286,7 +286,7 @@ class Song(commands.Cog):
         await ctx.delete()
         message = await ctx.send(embed=embed,
                                  view=None if player.queue.empty() else
-                                 QueueMainView(player.queue, queue_list, 0))
+                                 QueueMainView(player.queue, queue_list, player.current, 0))
         player.queue_message[ctx.guild.id][ctx.channel.id] = message.id
 
         return message

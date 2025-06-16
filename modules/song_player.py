@@ -405,11 +405,11 @@ async def edit_queue_message(player: SongPlayer, source: YTDLSource) -> None:
             try:
                 await message.edit(embed=embed,
                                    view=None if player.queue.empty() else
-                                   QueueMainView(player.queue, player.queue_list, 0))
+                                   QueueMainView(player.queue, player.queue_list, player.current, 0))
             except discord.errors.InvalidArgument:
                 del player.queue_message[guild_id][channel_id]
             except discord.errors.HTTPException:
                 new_message = await player.ctx.send(embed=embed,
                                                     view=None if player.queue.empty() else
-                                                    QueueMainView(player.queue, player.queue_list, 0))
+                                                    QueueMainView(player.queue, player.queue_list, player.current, 0))
                 player.queue_message[guild_id][channel_id] = new_message
