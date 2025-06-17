@@ -2,7 +2,7 @@
   "song": {
     "ko": {
       "1": {
-        "name": "접속",
+        "name": "접속ㅇ",
         "description": "봇이 유저가 참여해 있는 음성 채팅방에 접속합니다.\n\n봇이 이미 다른 음성 채팅방에 참여해 있는 경우, `확인` 버튼을 누르면 봇이 이동합니다."
       },
       "2": {
@@ -21,22 +21,26 @@
         "description": "봇이 현재 재생 중인 음악과 대기열에 있는 음악을 보여줍니다.\n\n대기열의 음악이 10개 초과인 경우, 버튼을 통해 페이지를 넘길 수 있습니다.\n\n현재 페이지의 곡을 선택 해 삭제 할 수 있습니다."
       },
       "5": {
+          "name": "플레이리스트",
+          "description": "사용자 지정 플레이리스트를 추가/관리/재생합니다."
+      },
+      "6": {
         "name": "일시정지",
         "description": "봇이 현재 재생 중인 음악을 일시정지합니다."
       },
-      "6": {
+      "7": {
         "name": "재개",
         "description": "봇이 일시정지한 음악을 다시 재생합니다."
       },
-      "7": {
+      "8": {
         "name": "스킵",
         "description": "봇이 현재 재생 중인 음악을 스킵합니다."
       },
-      "8": {
+      "9": {
         "name": "중지",
         "description": "봇이 재생중인 음악을 중지하고, 대기열을 초기화 한 후 음성 채팅방에서 퇴장합니다."
       },
-      "9": {
+      "10": {
         "name": "볼륨",
         "args": [
           "<볼륨>"
@@ -66,22 +70,26 @@
         "description": "Show the music that the bot is currently playing and the music that is in the queue.\n\nIf you have more than 10 music in the queue, you can turn the page through a button.\n\nYou can select and delete a song on the current page."
       },
       "5": {
+          "name": "playlist",
+          "description": "Add/Manage/Play your custom playlist."
+      },
+      "6": {
         "name": "pause",
         "description": "Pause the music that is currently playing."
       },
-      "6": {
+      "7": {
         "name": "resume",
         "description": "Resume the music that has been paused"
       },
-      "7": {
+      "8": {
         "name": "skip",
         "description": "Skip the music that is currently playing."
       },
-      "8": {
+      "9": {
         "name": "stop",
         "description": "The bot stops playing music, initializes the queue and exits the voice chat."
       },
-      "9": {
+      "10": {
         "name": "volume",
         "args": [
           "<volume>"
