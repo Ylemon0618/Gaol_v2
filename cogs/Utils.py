@@ -135,16 +135,11 @@ class CommandListView(discord.ui.View):
     def __init__(self, lang: str, page: int, group: str, prefix: str):
         super().__init__(timeout=None)
 
-        self.lang = lang
-        self.page = page
-        self.group = group
-        self.prefix = prefix
-
-        self.add_item(CommandPrevButton(self.lang, self.page, self.group, self.prefix))
-        self.add_item(CommandNextButton(self.lang, self.page, self.group, self.prefix))
-        self.add_item(CommandBackButton(self.lang))
-        self.add_item(CommandLangButton(self.lang, self.page, self.group, self.prefix))
-        self.add_item(CommandListSelect(self.lang, self.page, self.group, self.prefix))
+        self.add_item(CommandPrevButton(lang, page, group, prefix))
+        self.add_item(CommandNextButton(lang, page, group, prefix))
+        self.add_item(CommandBackButton(lang))
+        self.add_item(CommandLangButton(lang, page, group, prefix))
+        self.add_item(CommandListSelect(lang, page, group, prefix))
 
 
 class CommandNextButton(discord.ui.Button):
@@ -337,7 +332,7 @@ class Utils(commands.Cog):
 
         embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url)
 
-        embed.add_field(name="Version | 버전", value="Beta 0.0.1", inline=False)
+        # embed.add_field(name="Version | 버전", value="v1.0.0", inline=False)
         embed.add_field(name="Ping | 핑", value=f"{round(self.bot.latency * 1000)}ms", inline=False)
         embed.add_field(name="Guilds | 서버 수", value=len(self.bot.guilds), inline=True)
         embed.add_field(name="Users | 유저 수", value=len(self.bot.users), inline=True)
