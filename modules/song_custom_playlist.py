@@ -173,9 +173,9 @@ class SongCustomPlaylistSelect(discord.ui.Select):
 
             embed.set_footer(text=self.ctx.author.display_name, icon_url=self.ctx.author.display_avatar.url)
 
-            await downloading.edit(embed=embed)
+            return await downloading.edit(embed=embed)
         elif task == "add":
-            await interaction.response.send_modal(modal=SongCustomPlaylistAddModal(self.user_id, self.playlist))
+            return await interaction.response.send_modal(modal=SongCustomPlaylistAddModal(self.user_id, self.playlist))
         elif task == "show":
             if not self.playlist:
                 return await interaction.response.edit_message(
@@ -184,10 +184,11 @@ class SongCustomPlaylistSelect(discord.ui.Select):
                                     Color.warning),
                     view=SongCustomPlaylistAddButton(self.user_id))
 
-            await interaction.response.edit_message(
+            return await interaction.response.edit_message(
                 embed=set_playlist_field(self.title, 0),
                 view=SongCustomPlaylistShowView(self.ctx, self.bot, self.players,
                                                 self.user_id, self.playlist, self.title))
+        return None
 
 
 class SongCustomPlaylistAddButton(discord.ui.Button):
