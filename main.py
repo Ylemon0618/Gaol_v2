@@ -1,16 +1,18 @@
 from abc import ABC
+from google.cloud import translate_v2 as translate
 
 from modules import *
 
 load_dotenv()
 
+bot_id = int(os.environ.get('ID'))
 OWNERS = list(map(int, os.environ.get('OWNERS').split()))
 intents = discord.Intents.all()
 
 
 class Bot(commands.Bot, ABC):
     def __init__(self):
-        super().__init__(intents=intents, command_prefix="!", owner_ids=OWNERS)
+        super().__init__(intents=intents, command_prefix=f"<@{bot_id}> ", owner_ids=OWNERS)
 
         self.remove_command("help")
 
@@ -49,5 +51,20 @@ async def eval_(ctx, *, code: str):
     except Exception as e:
         dm = await ctx.author.create_dm()
         await dm.send(e)
+
+
+@bot.command(name="korean", aliases=["ko", "한국어"])
+async def korean(ctx: ApplicationContext):
+    try:
+        reply = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+        content = reply.content
+
+        translate_client = translate.Client()
+        translated = translate_client.translate(content, target_language="ko")
+
+        await ctx.send(translated['translatedText'])
+    except AttributeError:
+        await ctx.send("Please reply on message")
+
 
 bot.run(os.environ.get('TOKEN'))
