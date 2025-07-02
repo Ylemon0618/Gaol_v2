@@ -69,7 +69,7 @@ async def korean(ctx: ApplicationContext):
 
 
 @bot.command(name="translate", aliases=["trans", "tr", "번역"])
-async def translate(ctx: ApplicationContext, dest: str):
+async def translate_(ctx: ApplicationContext, dest: str):
     try:
         reply = await ctx.channel.fetch_message(ctx.message.reference.message_id)
         content = reply.content
@@ -77,7 +77,7 @@ async def translate(ctx: ApplicationContext, dest: str):
         translate_client = translate.Client()
         translated = translate_client.translate(content, target_language=dest)
 
-        text = translated['translatedText']
+        text = unescape(translated['translatedText'])
         await ctx.send(text)
     except AttributeError:
         await ctx.send("Please reply on message")
