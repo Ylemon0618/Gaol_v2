@@ -1,5 +1,6 @@
 from abc import ABC
 from google.cloud import translate_v2 as translate
+from html import unescape
 
 from modules import *
 
@@ -68,7 +69,7 @@ async def korean(ctx: ApplicationContext):
 
 
 @bot.command(name="translate", aliases=["trans", "tr", "번역"])
-async def korean(ctx: ApplicationContext, dest: str):
+async def translate(ctx: ApplicationContext, dest: str):
     try:
         reply = await ctx.channel.fetch_message(ctx.message.reference.message_id)
         content = reply.content
@@ -76,7 +77,7 @@ async def korean(ctx: ApplicationContext, dest: str):
         translate_client = translate.Client()
         translated = translate_client.translate(content, target_language=dest)
 
-        await ctx.send(translated['translatedText'])
+        await ctx.send(unescape(translated['translatedText']))
     except AttributeError:
         await ctx.send("Please reply on message")
     except Exeption as e:
