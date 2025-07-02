@@ -77,7 +77,7 @@ async def translate(ctx: ApplicationContext, dest: str):
         translate_client = translate.Client()
         translated = translate_client.translate(content, target_language=dest)
 
-        text = unescape(translated['translatedText'])
+        text = unescape(str(translated['translatedText']))
         await ctx.send(text)
     except AttributeError:
         await ctx.send("Please reply on message")
