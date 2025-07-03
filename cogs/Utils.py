@@ -2,10 +2,13 @@ import os
 from dotenv import load_dotenv
 import json
 from copy import deepcopy
+from html import unescape
 
 import discord
-from discord import ApplicationContext, Interaction
+from discord import Option, ApplicationContext, Interaction
 from discord.ext import commands
+from google.cloud import translate_v2 as translate
+import google.cloud as cloud
 
 from modules.make_embed import makeEmbed, Color
 from modules.messages.embeds import HelpEmbed
@@ -13,6 +16,10 @@ from modules.messages.embeds import HelpEmbed
 load_dotenv()
 
 guild_ids = list(map(int, os.environ.get('GUILDS').split()))
+
+client = cloud.translate.TranslationServiceClient()
+rare_supported_langs = client.get_supported_languages(parent="projects/" + os.environ.get('GOOGLE_CLOUD_PROJECT_ID'))
+supported_langs = [lang.language_code for lang in rare_supported_langs.languages]
 
 
 class HelpView(discord.ui.View):
@@ -339,6 +346,60 @@ class Utils(commands.Cog):
         embed.add_field(name="Commands | 명령어", value="Enter `/utils help`!\n/`유틸리티 도움`을 입력해 보세요!", inline=False)
 
         await ctx.respond(embed=embed)
+
+    # @utils_commands.command(name="calendar", name_localizations={"ko": "달력"},
+    #                         description="Manage and view your calendar and events",
+    #                         description_localizations={"ko": "달력과 이벤트를 관리하고 확인합니다."})
+    # async def calendar_(self, ctx: ApplicationContext):
+    #     pass
+
+    @utils_commands.command(name="translate", name_localizations={"ko": "번역"},
+                            description="Translate text to another language",
+                            description_localizations={"ko": "텍스트를 다른 언어로 번역합니다."})
+    async def translate_(self, ctx: ApplicationContext,
+                         text: Option(str, name="text", name_localizations={"ko": "텍스트"},
+                                      description="Enter the text to translate",
+                                      description_localizations={"ko": "번역할 텍스트를 입력해 주세요."}),
+                         target_lang: Option(str, name="target_language", name_localizations={"ko": "목표언어"},
+                                             description="Enter the target language",
+                                             description_localizations={"ko": "번역할 목표 언어를 입력해 주세요."}),
+                         source_lang: Option(str, name="source_language", name_localizations={"ko": "원본언어"},
+                                             description="Enter the source language",
+                                             description_localizations={"ko": "번역할 원본 언어를 입력해 주세요."}) = None
+                         ):
+        if target_lang not in supported_langs:
+            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:",
+                                                     f"{target_lang} is not supported language\n{target_lang}은(는) 지원하지 않는 언어입니다.\n\n[Supported languages / 지원하는 언어 목록](<https://cloud.google.com/translate/docs/languages>)",
+                                                     Color.error))
+        if source_lang and source_lang not in supported_langs:
+            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:",
+                                                     f"{source_lang} is not supported language\n{source_lang}은(는) 지원하지 않는 언어입니다.\n\n[Supported languages / 지원하는 언어 목록](<https://cloud.google.com/translate/docs/languages>)",
+                                                     Color.error))
+
+        translate_client = translate.Client()
+        try:
+            if source_lang:
+                translated = translate_client.translate(
+                    text,
+                    target_language=target_lang,
+                    source_language=source_lang
+                )
+            else:
+                translated = translate_client.translate(
+                    text,
+                    target_language=target_lang
+                )
+                source_lang = translated['detectedSourceLanguage']
+
+            translated_text = unescape(translated['translatedText'])
+
+            embed = makeEmbed(f"Translate | 번역 ({source_lang} → {target_lang})",
+                              f"-# Original Text ({source_lang})\n{text}\n\n-# Translated Text ({target_lang})\n{translated_text}",
+                              Color.success)
+            embed.set_footer(text="Powered by Google Translate API")
+            return await ctx.respond(embed=embed)
+        except Exception as e:
+            return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", str(e), Color.error))
 
 
 def setup(bot):
