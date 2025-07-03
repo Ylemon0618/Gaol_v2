@@ -81,8 +81,8 @@ async def translate_(ctx: ApplicationContext, dest: str):
         await ctx.send(text)
     except AttributeError:
         await ctx.send("Please reply on message")
-    except Exeption as e:
-        await ctx.send(e)
+    except Exception as e:
+        await ctx.send(str(e))
 
 
 bot.run(os.environ.get('TOKEN'))
