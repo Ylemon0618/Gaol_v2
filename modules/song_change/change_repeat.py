@@ -1,7 +1,7 @@
 import discord
 
-from modules.song_player import YTDLSource, SongPlayer
 from modules.messages.embeds import SongEmbed
+from modules.song_player import YTDLSource, SongPlayer
 
 
 class ChangeRepeatView(discord.ui.View):

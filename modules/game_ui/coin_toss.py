@@ -3,8 +3,8 @@ import random
 import discord
 from discord import ApplicationContext
 
-from modules.make_embed import makeEmbed, Color
 from modules.connect_db.balance import *
+from modules.make_embed import makeEmbed, Color
 
 
 async def coin_toss(ctx: ApplicationContext):

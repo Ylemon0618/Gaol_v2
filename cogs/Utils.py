@@ -1,14 +1,14 @@
-import os
-from dotenv import load_dotenv
 import json
+import os
 from copy import deepcopy
 from html import unescape
 
 import discord
+import google.cloud as cloud
 from discord import Option, ApplicationContext, Interaction
 from discord.ext import commands
+from dotenv import load_dotenv
 from google.cloud import translate_v2 as translate
-import google.cloud as cloud
 
 from modules.make_embed import makeEmbed, Color
 from modules.messages.embeds import HelpEmbed

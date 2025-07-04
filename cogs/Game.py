@@ -1,11 +1,9 @@
-import mahjong.meld
-from mahjong import *
 from discord import Option, OptionChoice
 from discord.ext import commands
 
-from modules.game_ui import *
-from modules.connect_db.balance import *
 from modules.connect_db.attendance import *
+from modules.connect_db.balance import *
+from modules.game_ui import *
 
 load_dotenv()
 
@@ -67,7 +65,7 @@ class Game(commands.Cog):
 
             embed = makeEmbed(":fist: :raised_hand: :v:", f"{ctx.user.mention}님이 가위바위보를 신청했습니다!", Color.success)
             dm = await user.create_dm()
-            await dm.send(embed=embed, view=RPSView(choice, ctx.author, ctx.channel))
+            return await dm.send(embed=embed, view=RPSView(choice, ctx.author, ctx.channel))
 
     @game_commands.command(name="gamble", name_localizations={"ko": "도박"},
                            description="Play a gambling game",

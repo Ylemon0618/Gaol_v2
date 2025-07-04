@@ -1,13 +1,12 @@
-import asyncio
+import os
 import shutil
 from functools import partial
-import os
-from dotenv import load_dotenv
 
-import discord
+import asyncio
 from async_timeout import timeout
 from discord import ApplicationContext
 from discord.ext import commands
+from dotenv import load_dotenv
 from yt_dlp import YoutubeDL
 
 from modules.make_embed import *

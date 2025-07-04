@@ -1,6 +1,6 @@
 import os
-import asyncio
 
+import asyncio
 import discord
 from discord import Interaction
 from dotenv import load_dotenv
