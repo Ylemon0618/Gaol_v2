@@ -2,12 +2,15 @@ from abc import ABC
 from google.cloud import translate_v2 as translate
 from html import unescape
 
+from discord import application_command
+
 from modules import *
 
 load_dotenv()
 
 bot_id = int(os.environ.get('ID'))
 OWNERS = list(map(int, os.environ.get('OWNERS').split()))
+guild_ids = list(map(int, os.environ.get('GUILDS').split()))
 intents = discord.Intents.all()
 
 
@@ -83,6 +86,34 @@ async def translate_(ctx: ApplicationContext, dest: str):
         await ctx.send("Please reply on message")
     except Exception as e:
         await ctx.send(str(e))
+
+
+@bot.message_command(name="korean", name_localizations={"ko": "한국어로"}, guild_ids=guild_ids)
+async def korean_message_(ctx: ApplicationContext, message: discord.Message):
+    try:
+        content = message.content
+
+        translate_client = translate.Client()
+        translated = translate_client.translate(content, target_language="ko")
+
+        text = unescape(translated['translatedText'])
+        await ctx.respond(text)
+    except Exception as e:
+        await ctx.respond(str(e))
+
+
+@bot.message_command(name="english", name_localizations={"ko": "영어로"}, guild_ids=guild_ids)
+async def english_message_(ctx: ApplicationContext, message: discord.Message):
+    try:
+        content = message.content
+
+        translate_client = translate.Client()
+        translated = translate_client.translate(content, target_language="en")
+
+        text = unescape(translated['translatedText'])
+        await ctx.respond(text)
+    except Exception as e:
+        await ctx.respond(str(e))
 
 
 bot.run(os.environ.get('TOKEN'))
