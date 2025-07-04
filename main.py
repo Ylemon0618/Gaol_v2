@@ -116,4 +116,24 @@ async def english_message_(ctx: ApplicationContext, message: discord.Message):
         await ctx.respond(str(e))
 
 
+@bot.message_command(name="save_to_DB", name_localizations={"ko": "DB에저장"}, guild_ids=guild_ids)
+async def save_to_db_message_(ctx: ApplicationContext, message: discord.Message):
+    if ctx.author.id not in OWNERS:
+        return await ctx.respond("You don't have permission to use this command.", ephemeral=True)
+
+    try:
+        content = message.content
+        author = message.author.id
+        channel = message.channel.id
+        message_id = message.id
+        guild = message.guild.id if message.guild else None
+        timestamp = message.created_at.isoformat()
+
+        save_message(content, author, channel, message_id, guild, timestamp)
+
+        return await ctx.respond("Message saved to DB successfully.")
+    except Exception as e:
+        return await ctx.respond(f"An error occurred: {str(e)}", ephemeral=True)
+
+
 bot.run(os.environ.get('TOKEN'))
