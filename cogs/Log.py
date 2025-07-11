@@ -110,7 +110,7 @@ class Log(commands.Cog):
                 self.bot = bot
 
             async def callback(self, interaction: discord.Interaction):
-                channel = self.bot.get_channel(int(self.channel_id.value))
+                channel = self.bot.get_channel(int(self.children[0].value))
                 if not channel or not isinstance(channel, discord.TextChannel):
                     return await interaction.response.send_message(
                         embed=makeEmbed("Invalid Channel ID", "Please enter a valid text channel ID.", Color.error),
