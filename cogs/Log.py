@@ -116,7 +116,7 @@ class Log(commands.Cog):
                         embed=makeEmbed("Invalid Channel ID", "Please enter a valid text channel ID.", Color.error),
                         ephemeral=True)
 
-                db.update_one({"guild_id": ctx.guild.id}, {"$set": {"channel_id": channel.id}})
+                db.update_one({"guild_id": ctx.guild.id}, {"$set": {"channel_id": channel.id, "enabled": True}})
                 return await interaction.response.send_message(embed=makeEmbed("Log Channel Set",
                                                                         f"Log channel has been set to {channel.mention}",
                                                                         Color.success), ephemeral=True)
