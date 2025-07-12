@@ -42,7 +42,7 @@ class Log(commands.Cog):
                 return
             if not self.status[guild.id]["enabled"]:
                 return
-            if channel.id in [guild.system_channel.id, guild.rules_channel.id] or channel.id in self.status[guild.id]:
+            if channel.id in [guild.system_channel.id, guild.rules_channel.id] or channel.id in self.status[guild.id]["excludedChannelIds"]:
                 return
 
             if message.author.bot and not self.status[guild.id]["logBotMessage"]:
