@@ -16,17 +16,40 @@ client = MongoClient(os.environ.get('MONGO_URI'))
 db = client["gaol"]["log"]
 
 
+# # Test decorator
+# def log_message_task(func):
+#     async def wrapper(self, message, *args, **kwargs):
+#         guild = message.guild
+#         channel = message.channel
+#
+#         if guild.id not in self.guilds:
+#             return
+#         if not self.status[guild.id]["enabled"]:
+#             return
+#         if channel.id in self.status[guild.id]["excludedChannelIds"]:
+#             return
+#
+#         if message.author.bot and not self.status[guild.id]["logBotMessage"]:
+#             return
+#
+#         try:
+#             await func(self, message, *args, **kwargs)
+#         except Exception as e:
+#             print(f"Error logging message: {e}")
+#     return wrapper
+
+
 class Log(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
         db_all = db.find()
-        self.status = []
+        self.status = {}
         self.guilds = []
         for doc in db_all:
             del doc["_id"]
             guild_id = doc.pop("guild_id")
-            self.status.append({guild_id: doc})
+            self.status[guild_id] = doc
             self.guilds.append(guild_id)
 
         @bot.listen(once=True)
@@ -42,7 +65,7 @@ class Log(commands.Cog):
                 return
             if not self.status[guild.id]["enabled"]:
                 return
-            if channel.id in [guild.system_channel.id, guild.rules_channel.id] or channel.id in self.status[guild.id]["excludedChannelIds"]:
+            if channel.id in self.status[guild.id]["excludedChannelIds"]:
                 return
 
             if message.author.bot and not self.status[guild.id]["logBotMessage"]:
@@ -57,7 +80,7 @@ class Log(commands.Cog):
                         container.add_text(f"- {attachment.url}")
 
                 log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
-                await log_channel.send(view=makeView(container))
+                await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
             except Exception as e:
                 print(f"Error logging message: {e}")
 
@@ -99,15 +122,17 @@ class Log(commands.Cog):
                     "excludedChannelIds": []
                     }
             db.insert_one(data)
+            self.status[ctx.guild.id] = data
 
         class ChannelIdModal(discord.ui.Modal):
-            def __init__(self, bot):
+            def __init__(self, bot, status):
                 super().__init__(title="Log Channel ID")
                 self.channel_id = discord.ui.InputText(label="Channel ID", placeholder="Enter the channel ID",
                                                        required=True, max_length=20)
                 self.add_item(self.channel_id)
 
                 self.bot = bot
+                self.status = status
 
             async def callback(self, interaction: discord.Interaction):
                 channel = self.bot.get_channel(int(self.children[0].value))
@@ -117,11 +142,14 @@ class Log(commands.Cog):
                         ephemeral=True)
 
                 db.update_one({"guild_id": ctx.guild.id}, {"$set": {"channel_id": channel.id, "enabled": True}})
+                self.status[interaction.guild.id]["channel_id"] = channel.id
+                self.status[interaction.guild.id]["enabled"] = True
+
                 return await interaction.response.send_message(embed=makeEmbed("Log Channel Set",
                                                                         f"Log channel has been set to {channel.mention}",
                                                                         Color.success), ephemeral=True)
 
-        return await ctx.send_modal(ChannelIdModal(self.bot))
+        return await ctx.send_modal(ChannelIdModal(self.bot, self.status))
 
 
 def setup(bot):
