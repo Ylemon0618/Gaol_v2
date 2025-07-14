@@ -61,14 +61,11 @@ class Log(commands.Cog):
             guild = message.guild
             channel = message.channel
 
-            if guild.id not in self.guilds:
+            if guild.id not in self.guilds or not self.status[guild.id]["enabled"] or channel.id in self.status[guild.id]["excludedChannelIds"]:
                 return
-            if not self.status[guild.id]["enabled"]:
-                return
-            if channel.id in self.status[guild.id]["excludedChannelIds"]:
-                return
-
             if message.author.bot and not self.status[guild.id]["logBotMessage"]:
+                return
+            if not self.status[guild.id]["logMessageSend"]:
                 return
 
             try:
@@ -87,6 +84,64 @@ class Log(commands.Cog):
                 await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
             except Exception as e:
                 print(f"Error logging message: {e}")
+
+        @bot.listen()
+        async def on_message_edit(before: discord.Message, after: discord.Message):
+            guild = before.guild
+            channel = before.channel
+
+            if guild.id not in self.guilds or not self.status[guild.id]["enabled"] or channel.id in self.status[guild.id]["excludedChannelIds"]:
+                return
+            if before.author.bot and not self.status[guild.id]["logBotMessage"]:
+                return
+            if not self.status[guild.id]["logMessageEdit"]:
+                return
+
+            try:
+                container = discord.ui.Container()
+                container.add_text(f"### Message edited\nAuthor: {before.author.mention} | {before.author.id}\nTime: {after.edited_at.strftime('%Y-%m-%d %H:%M:%S')}\nChannel: {channel.mention} | {channel.id}\nBefore: {before.content}\nAfter: {after.content}")
+                if before.attachments:
+                    container.add_text("Attachments before edit:")
+                    for attachment in before.attachments:
+                        container.add_text(f"- {attachment.url}")
+                if after.attachments:
+                    container.add_text("Attachments after edit:")
+                    for attachment in after.attachments:
+                        container.add_text(f"- {attachment.url}")
+
+                log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
+                await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
+            except Exception as e:
+                print(f"Error logging message edit: {e}")
+
+        @bot.listen()
+        async def on_message_delete(message: discord.Message):
+            guild = message.guild
+            channel = message.channel
+
+            if guild.id not in self.guilds or not self.status[guild.id]["enabled"] or channel.id in self.status[guild.id]["excludedChannelIds"]:
+                return
+            if message.author.bot and not self.status[guild.id]["logBotMessage"]:
+                return
+            if not self.status[guild.id]["logMessageDelete"]:
+                return
+
+            try:
+                container = discord.ui.Container()
+                container.add_text(f"### Message deleted\nAuthor: {message.author.mention} | {message.author.id}\nTime: {message.created_at.strftime('%Y-%m-%d %H:%M:%S')}\nChannel: {channel.mention} | {channel.id}\nContent: {message.content}")
+                if message.attachments:
+                    container.add_text("Attachments:")
+                    for attachment in message.attachments:
+                        container.add_text(f"- {attachment.url}")
+                if message.stickers:
+                    container.add_text("Stickers:")
+                    for sticker in message.stickers:
+                        container.add_text(f"- {sticker.name} | {sticker.id}")
+
+                log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
+                await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
+            except Exception as e:
+                print(f"Error logging message delete: {e}")
 
 
     log_commands = discord.SlashCommandGroup(name="log", name_localizations={"ko": "로그"},
@@ -111,6 +166,7 @@ class Log(commands.Cog):
                     "logMemberJoin": True,
                     "logMemberLeave": True,
                     "logPunishment": True,
+                    "logMessageSend": True,
                     "logMessageEdit": True,
                     "logMessageDelete": True,
                     "logMessageReactionAdd": False,
