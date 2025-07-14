@@ -78,6 +78,10 @@ class Log(commands.Cog):
                     container.add_text("Attachments:")
                     for attachment in message.attachments:
                         container.add_text(f"- {attachment.url}")
+                if message.stickers:
+                    container.add_text("Stickers:")
+                    for sticker in message.stickers:
+                        container.add_text(f"- {sticker.name} | {sticker.id}")
 
                 log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
                 await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
