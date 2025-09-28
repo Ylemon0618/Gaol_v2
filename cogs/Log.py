@@ -61,12 +61,18 @@ class Log(commands.Cog):
         async def on_message(message: discord.Message):
             guild = message.guild
             channel = message.channel
-
+            try:
+                log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
+            except:
+                return
+            
             if not guild or not channel:
                 return
             if guild.id not in self.guilds or not self.status[guild.id]["enabled"] or channel.id in self.status[guild.id]["excludedChannelIds"]:
                 return
             if message.author.bot and not self.status[guild.id]["logBotMessage"]:
+                return
+            if self.status[guild.id]["logBotMessage"] and message.author.bot and channel == log_channel:
                 return
             if not self.status[guild.id]["logMessageSend"]:
                 return
@@ -74,7 +80,7 @@ class Log(commands.Cog):
             try:
                 container = discord.ui.Container()
                 container.add_text(f"### Message sent\nAuthor: {message.author.mention} | {message.author.id}\nTime: {message.created_at.strftime('%Y-%m-%d %H:%M:%S')}\nChannel: {channel.mention} | {channel.id}\nContent: {message.content}")
-                if message.attachments:
+                if messageattachments:
                     container.add_text("Attachments:")
                     for attachment in message.attachments:
                         container.add_text(f"- {attachment.url}")
@@ -83,7 +89,6 @@ class Log(commands.Cog):
                     for sticker in message.stickers:
                         container.add_text(f"- {sticker.name} | {sticker.id}")
 
-                log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
                 await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
             except Exception as e:
                 print(f"Error logging message: {e}")
