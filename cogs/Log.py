@@ -61,10 +61,6 @@ class Log(commands.Cog):
         async def on_message(message: discord.Message):
             guild = message.guild
             channel = message.channel
-            try:
-                log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
-            except Error as e:
-                return
             
             if not guild or not channel:
                 return
@@ -72,7 +68,7 @@ class Log(commands.Cog):
                 return
             if message.author.bot and not self.status[guild.id]["logBotMessage"]:
                 return
-            if self.status[guild.id]["logBotMessage"] and message.author.bot and channel.id == log_channel.id:
+            if self.status[guild.id]["logBotMessage"] and message.author.bot and channel.id == self.status[guild.id]["channel_id"]:
                 return
             if not self.status[guild.id]["logMessageSend"]:
                 return
@@ -89,6 +85,7 @@ class Log(commands.Cog):
                     for sticker in message.stickers:
                         container.add_text(f"- {sticker.name} | {sticker.id}")
 
+                log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
                 await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
             except Exception as e:
                 print(f"Error logging message: {e}")
