@@ -617,6 +617,13 @@ class Log(commands.Cog):
                                                                         Color.success), ephemeral=True)
 
         return await ctx.send_modal(ChannelIdModal(self.bot, self.status))
+        
+        
+    @log_commands.command(name="change", name_localizations={"ko": "변경"},
+                          description="Change log setting",
+                          description_localizations={"ko": "로그 설정을 변경합니다."})
+    async def change_(self, ctx: ApplicationContext):
+        pass
 
 
 def setup(bot):
