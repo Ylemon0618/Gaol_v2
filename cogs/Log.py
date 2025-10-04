@@ -63,25 +63,20 @@ class Log(commands.Cog):
             channel = message.channel
             
             if not guild or not channel:
-                await channel.send("test1")
                 return
             if guild.id not in self.guilds or not self.status[guild.id]["enabled"] or channel.id in self.status[guild.id]["excludedChannelIds"]:
-                await channel.send("test2")
                 return
             if message.author.bot and not self.status[guild.id]["logBotMessage"]:
-                await channel.send("test3")
                 return
             if self.status[guild.id]["logBotMessage"] and message.author.bot and channel.id == self.status[guild.id]["channel_id"]:
-                await channel.send("test4")
                 return
             if not self.status[guild.id]["logMessageSend"]:
-                await channel.send("test5")
                 return
 
             try:
                 container = discord.ui.Container()
                 container.add_text(f"### Message sent\nAuthor: {message.author.mention} | {message.author.id}\nTime: {message.created_at.strftime('%Y-%m-%d %H:%M:%S')}\nChannel: {channel.mention} | {channel.id}\nContent: {message.content}")
-                if messageattachments:
+                if message.attachments:
                     container.add_text("Attachments:")
                     for attachment in message.attachments:
                         container.add_text(f"- {attachment.url}")
