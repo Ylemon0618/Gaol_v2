@@ -63,8 +63,8 @@ class Log(commands.Cog):
             channel = message.channel
             try:
                 log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
-            except:
-                return
+            except Error as e:
+                await message.channel.send(e)
             
             if not guild or not channel:
                 return
