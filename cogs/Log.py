@@ -64,7 +64,7 @@ class Log(commands.Cog):
             try:
                 log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
             except Error as e:
-                await message.channel.send(e)
+                return
             
             if not guild or not channel:
                 return
@@ -72,7 +72,7 @@ class Log(commands.Cog):
                 return
             if message.author.bot and not self.status[guild.id]["logBotMessage"]:
                 return
-            if self.status[guild.id]["logBotMessage"] and message.author.bot and channel == log_channel:
+            if self.status[guild.id]["logBotMessage"] and message.author.bot and channel.id == log_channel.id:
                 return
             if not self.status[guild.id]["logMessageSend"]:
                 return
