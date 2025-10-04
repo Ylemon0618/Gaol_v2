@@ -93,7 +93,6 @@ class Log(commands.Cog):
                 log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
                 await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
             except Exception as e:
-                await channel.send(f"test6: {e}")
                 print(f"Error logging message: {e}")
 
         @bot.listen()
