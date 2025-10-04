@@ -63,14 +63,19 @@ class Log(commands.Cog):
             channel = message.channel
             
             if not guild or not channel:
+                await channel.send("test1")
                 return
             if guild.id not in self.guilds or not self.status[guild.id]["enabled"] or channel.id in self.status[guild.id]["excludedChannelIds"]:
+                await channel.send("test2")
                 return
             if message.author.bot and not self.status[guild.id]["logBotMessage"]:
+                await channel.send("test3")
                 return
             if self.status[guild.id]["logBotMessage"] and message.author.bot and channel.id == self.status[guild.id]["channel_id"]:
+                await channel.send("test4")
                 return
             if not self.status[guild.id]["logMessageSend"]:
+                await channel.send("test5")
                 return
 
             try:
@@ -88,6 +93,7 @@ class Log(commands.Cog):
                 log_channel = self.bot.get_channel(self.status[guild.id]["channel_id"])
                 await log_channel.send(view=makeView(container), allowed_mentions=discord.AllowedMentions.none())
             except Exception as e:
+                await channel.send(f"test6: {e}")
                 print(f"Error logging message: {e}")
 
         @bot.listen()
