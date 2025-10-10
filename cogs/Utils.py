@@ -2,6 +2,7 @@ import json
 import os
 from copy import deepcopy
 from html import unescape
+from datetime import datetime
 
 import discord
 import google.cloud as cloud
@@ -400,6 +401,39 @@ class Utils(commands.Cog):
             return await ctx.respond(embed=embed)
         except Exception as e:
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", str(e), Color.error))
+
+    @utils_command.command(name="timeout", name_localizations={"ko": "타임아웃"},
+                            description="Timeout user",
+                            description_localizations={"ko": "유저를 타임아웃합니다."})
+    async def timeout_(self, ctx: ApplicationContext,
+                       user: Option(discord.Member, name="user", name_localizations={"ko": "유저"},
+                                    description="Enter the user to timeout",
+                                    description_localizations={"ko": "타임아웃 할 유저를 입력 해 주세요."}),
+                       day: Option(int, name="day", name_localizations={"ko": "일"},
+                                   description="Enter day of the period to timeout",
+                                   description_localizations={"ko": "타임아웃 할 기간의 일수을 입력 해 주세요."}) = 0,
+                       hour: Option(int, name="hour", name_localizations={"ko": "시간"},
+                                    description="Enter hour of the period to timeout",
+                                    description_localizations={"ko": "타임아웃 할 기간의 시간을 입력 해 주세요."}) = 0,
+                       minute: Option(int, name="minute", name_localizations={"ko": "분"},
+                                      description="Enter minute of the period to timeout",
+                                      description_localizations={"ko": "타임아웃 할 기간의 분을 입력 해 주세요."}) = 0,
+                       second: Option(int, name="second", name_localizations={"ko": "초"},
+                                      description="Enter second of the period to timeout",
+                                      description_localizations={"ko": "타임아웃 할 기간의 초를 입력 해 주세요."}) = 0,
+                       reason: Option(str, name="reason", name_localizations={"ko": "사유"},
+                                      description="Enter the reason of timeout",
+                                      description_localizations={"ko": "타임아웃의 사유를 입력 해 주세요."}) = None
+                       ):
+        if not (day or minute or second):
+            return await ctx.respond(embed=makeEmbed("Error", "Lack of Arguments", Color.error))
+
+        try:
+            duration = datetime.timedelta(days=day, hours=hour, minutes=minute, seconds=second)
+            await user.timeout_for(duration=duration, reason=reason)
+            return await ctx.respond(embed=makeEmbed("Timeout", f"{user.mention}에게 {day}일 {hour}시간 {minute}분 {second}초의 타임아웃을 적용했습니다.", Color.success))
+        except Exception as e:
+            pass
 
 
 def setup(bot):
