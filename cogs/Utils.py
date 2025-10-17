@@ -425,7 +425,7 @@ class Utils(commands.Cog):
                                       description="Enter the reason of timeout",
                                       description_localizations={"ko": "타임아웃의 사유를 입력 해 주세요."}) = None
                        ):
-        if not (day or minute or second):
+        if not (day or hour or minute or second):
             return await ctx.respond(embed=makeEmbed("Error", "Lack of Arguments", Color.error))
 
         try:
