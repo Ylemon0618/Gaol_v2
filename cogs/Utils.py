@@ -402,7 +402,7 @@ class Utils(commands.Cog):
         except Exception as e:
             return await ctx.respond(embed=makeEmbed(":warning: Error :warning:", str(e), Color.error))
 
-    @utils_command.command(name="timeout", name_localizations={"ko": "타임아웃"},
+    @utils_commands.command(name="timeout", name_localizations={"ko": "타임아웃"},
                             description="Timeout user",
                             description_localizations={"ko": "유저를 타임아웃합니다."})
     async def timeout_(self, ctx: ApplicationContext,
